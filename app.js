@@ -295,13 +295,11 @@ function renderWeather(data, cityName, lat, lon) {
 
     showState('weatherContent');
 
-    // Auf Smartphone: Karte klein, Infos groß
-    if (window.innerWidth <= 768) {
-        mapIsExpanded = false;
-        setMapHeight(38);
-        mapToggleBtn.textContent = '⛶';
-        mapToggleBtn.title = 'Karte vergrößern';
-    }
+    // Nach Ortsauswahl: Karte klein, Infos groß
+    mapIsExpanded = false;
+    setMapHeight(38);
+    mapToggleBtn.textContent = '⛶';
+    mapToggleBtn.title = 'Karte vergrößern';
 }
 
 // ---- Suche ----
@@ -448,10 +446,8 @@ const mapWrapper   = document.querySelector('.map-wrapper');
 let mapIsExpanded = false;
 
 function setMapHeight(vh) {
-    if (window.innerWidth <= 768) {
-        mapWrapper.style.height = vh + 'vh';
-        setTimeout(() => map.invalidateSize(), 360);
-    }
+    mapWrapper.style.height = vh + 'vh';
+    setTimeout(() => map.invalidateSize(), 360);
 }
 
 mapToggleBtn.addEventListener('click', () => {
