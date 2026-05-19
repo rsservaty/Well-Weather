@@ -691,6 +691,17 @@ body {
     display: none !important;
 }
 
+/* ---- Panel-Hidden Modus (Toggle auf Mobile) ---- */
+body.panel-hidden .weather-panel {
+    display: none !important;
+}
+
+body.panel-hidden .map-wrapper {
+    flex: 1 !important;
+    height: auto !important;
+    min-height: 0 !important;
+}
+
 /* ---- Responsive ---- */
 @media (max-width: 768px) {
     body {

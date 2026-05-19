@@ -499,6 +499,7 @@ function setMapHeight(vh) {
 
 function showPanel() {
     panelVisible = true;
+    document.body.classList.remove('panel-hidden');
     setMapHeight(38);
     mapToggleBtn.textContent = '🗕';
     mapToggleBtn.title = 'Panel ausblenden';
@@ -506,14 +507,15 @@ function showPanel() {
 
 function hidePanel() {
     panelVisible = false;
-    setMapHeight(88);
+    document.body.classList.add('panel-hidden');
+    setTimeout(() => { map.invalidateSize(); }, 50);
     mapToggleBtn.textContent = '⛶';
     mapToggleBtn.title = 'Panel einblenden';
 }
 
 function togglePanel() {
     if (panelVisible) {
-        location.reload();
+        hidePanel();
     } else {
         showPanel();
     }
