@@ -631,14 +631,22 @@ body {
 
 /* ---- Responsive ---- */
 @media (max-width: 768px) {
+    body {
+        overflow: hidden;
+        height: 100dvh;
+    }
+
     .app-main {
         flex-direction: column;
-        overflow: auto;
+        flex: 1;
+        overflow: hidden;
+        min-height: 0;
     }
 
     .map-wrapper {
+        flex: none !important;
         height: 55vh;
-        min-height: 250px;
+        min-height: 0 !important;
         transition: height 0.3s ease;
     }
 
@@ -647,7 +655,9 @@ body {
         min-width: unset;
         border-left: none;
         border-top: 1px solid var(--border);
-        min-height: unset;
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
     }
 
     .app-header {
