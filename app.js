@@ -439,13 +439,76 @@ function tryGeolocation() {
     );
 }
 
+// ---- Drag Handle (Bottom Sheet) ----
+const dragHandle = document.getElementById('dragHandle');
+let dragStartY   = 0;
+let dragStartH   = 0;
+let isDragging   = false;
+
+function getMapHeightPx() {
+    return mapWrapper.getBoundingClientRect().height;
+}
+
+function applyMapHeightPx(px) {
+    const vh = (px / window.innerHeight) * 100;
+    const clamped = Math.min(90, Math.max(15, vh));
+    mapWrapper.style.height = clamped + 'vh';
+}
+
+function onDragStart(clientY) {
+    if (!isMobile()) return;
+    isDragging  = true;
+    dragStartY  = clientY;
+    dragStartH  = getMapHeightPx();
+    document.body.style.userSelect = 'none';
+}
+
+function onDragMove(clientY) {
+    if (!isDragging) return;
+    const delta = clientY - dragStartY;
+    applyMapHeightPx(dragStartH + delta);
+}
+
+function onDragEnd(clientY) {
+    if (!isDragging) return;
+    isDragging = false;
+    document.body.style.userSelect = '';
+
+    // Einrasten: < 25vh → klein (20), > 65vh → groß (85), sonst mittig (45)
+    const currentVh = (getMapHeightPx() / window.innerHeight) * 100;
+    let snapVh;
+    if (currentVh < 25)      snapVh = 20;
+    else if (currentVh > 65) snapVh = 85;
+    else                     snapVh = 45;
+
+    mapWrapper.style.transition = 'height 0.25s ease';
+    mapWrapper.style.height = snapVh + 'vh';
+    setTimeout(() => {
+        mapWrapper.style.transition = '';
+        map.invalidateSize();
+    }, 280);
+}
+
+// Touch Events
+dragHandle.addEventListener('touchstart', e => onDragStart(e.touches[0].clientY), { passive: true });
+document.addEventListener('touchmove',   e => { if (isDragging) { e.preventDefault(); onDragMove(e.touches[0].clientY); } }, { passive: false });
+document.addEventListener('touchend',    e => onDragEnd(e.changedTouches[0].clientY));
+
+// Mouse Events (für Desktop-Test)
+dragHandle.addEventListener('mousedown', e => onDragStart(e.clientY));
+document.addEventListener('mousemove',   e => onDragMove(e.clientY));
+document.addEventListener('mouseup',     e => onDragEnd(e.clientY));
+
 // ---- Karten-Toggle (Smartphone) ----
 const mapToggleBtn = document.getElementById('mapToggleBtn');
 const mapWrapper   = document.querySelector('.map-wrapper');
 
 let mapIsExpanded = false;
 
+const isMobile = () => window.matchMedia('(max-width: 768px)').matches;
+
 function setMapHeight(vh) {
+    if (!isMobile()) return;
     mapWrapper.style.height = vh + 'vh';
     setTimeout(() => map.invalidateSize(), 360);
 }

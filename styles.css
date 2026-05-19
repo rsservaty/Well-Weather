@@ -372,6 +372,34 @@ body {
     to { transform: rotate(360deg); }
 }
 
+/* ---- Drag Handle ---- */
+.drag-handle {
+    display: none;
+    justify-content: center;
+    align-items: center;
+    padding: 0.6rem 0 0.2rem;
+    cursor: grab;
+    touch-action: none;
+    flex-shrink: 0;
+}
+
+.drag-handle:active {
+    cursor: grabbing;
+}
+
+.drag-handle-bar {
+    width: 40px;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+}
+
+@media (max-width: 768px) {
+    .drag-handle {
+        display: flex;
+    }
+}
+
 /* ---- Wetter-Inhalt ---- */
 .weather-content {
     padding: 1.25rem;
