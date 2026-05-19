@@ -655,7 +655,9 @@ body {
     }
 
     .map-toggle-btn {
-        display: none;
+        top: auto;
+        bottom: calc(50vh + 0.6rem);
+        right: 0.6rem;
     }
 
     /* Bottom Sheet */

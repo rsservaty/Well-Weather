@@ -503,9 +503,26 @@ dragHandle.addEventListener('mousedown', e => onDragStart(e.clientY));
 document.addEventListener('mousemove',   e => onDragMove(e.clientY));
 document.addEventListener('mouseup',     () => onDragEnd());
 
-// ---- Karten-Toggle (Desktop) ----
+// ---- Toggle-Button ----
 const mapToggleBtn = document.getElementById('mapToggleBtn');
 const mapWrapper   = document.querySelector('.map-wrapper');
+
+let panelExpanded = false;
+
+mapToggleBtn.addEventListener('click', () => {
+    panelExpanded = !panelExpanded;
+    weatherPanel.style.transition = 'height 0.25s ease';
+    if (panelExpanded) {
+        weatherPanel.style.height = '85vh';
+        mapToggleBtn.textContent  = '🗕';
+        mapToggleBtn.title        = 'Panel verkleinern';
+    } else {
+        weatherPanel.style.height = '12vh';
+        mapToggleBtn.textContent  = '⛶';
+        mapToggleBtn.title        = 'Panel vergrößern';
+    }
+    setTimeout(() => { weatherPanel.style.transition = ''; map.invalidateSize(); }, 280);
+});
 
 // ---- App starten ----
 initMap();
