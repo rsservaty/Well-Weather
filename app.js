@@ -297,10 +297,10 @@ function renderWeather(data, cityName, lat, lon) {
 
     // Auf Smartphone: Karte klein, Infos groß
     if (window.innerWidth <= 768) {
-        mapWrapper.classList.remove('map-expanded');
-        mapWrapper.classList.add('weather-shown');
+        mapIsExpanded = false;
+        setMapHeight(38);
         mapToggleBtn.textContent = '⛶';
-        setTimeout(() => map.invalidateSize(), 360);
+        mapToggleBtn.title = 'Karte vergrößern';
     }
 }
 
@@ -445,24 +445,27 @@ function tryGeolocation() {
 const mapToggleBtn = document.getElementById('mapToggleBtn');
 const mapWrapper   = document.querySelector('.map-wrapper');
 
-mapToggleBtn.addEventListener('click', () => {
-    const expanded = mapWrapper.classList.toggle('map-expanded');
-    mapToggleBtn.title = expanded ? 'Karte verkleinern' : 'Karte vergrößern';
-    mapToggleBtn.textContent = expanded ? '🗕' : '⛶';
-    if (expanded) {
-        // Karte groß → weather-shown entfernen
-        mapWrapper.classList.remove('weather-shown');
-    }
-    setTimeout(() => map.invalidateSize(), 360);
-});
+let mapIsExpanded = false;
 
-// Hilfsfunktion: Karte auf "Suchmodus" zurücksetzen
-function showMapMode() {
-    mapWrapper.classList.remove('weather-shown');
-    mapWrapper.classList.remove('map-expanded');
-    mapToggleBtn.textContent = '⛶';
-    setTimeout(() => map.invalidateSize(), 360);
+function setMapHeight(vh) {
+    if (window.innerWidth <= 768) {
+        mapWrapper.style.height = vh + 'vh';
+        setTimeout(() => map.invalidateSize(), 360);
+    }
 }
+
+mapToggleBtn.addEventListener('click', () => {
+    mapIsExpanded = !mapIsExpanded;
+    if (mapIsExpanded) {
+        setMapHeight(90);
+        mapToggleBtn.textContent = '🗕';
+        mapToggleBtn.title = 'Karte verkleinern';
+    } else {
+        setMapHeight(38);
+        mapToggleBtn.textContent = '⛶';
+        mapToggleBtn.title = 'Karte vergrößern';
+    }
+});
 
 // ---- App starten ----
 initMap();
