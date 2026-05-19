@@ -467,8 +467,11 @@ function hidePanel() {
 }
 
 function togglePanel() {
-    if (panelVisible) hidePanel();
-    else showPanel();
+    if (panelVisible) {
+        location.reload();
+    } else {
+        showPanel();
+    }
 }
 
 // Tippen auf den Handle-Balken
