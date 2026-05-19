@@ -244,6 +244,61 @@ body {
     box-shadow: var(--shadow);
 }
 
+.map-toggle-btn {
+    position: absolute;
+    top: 0.6rem;
+    right: 0.6rem;
+    z-index: 500;
+    background: var(--hint-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    width: 34px;
+    height: 34px;
+    font-size: 1.1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--shadow);
+    backdrop-filter: blur(4px);
+    transition: background 0.2s;
+    color: var(--text-primary);
+}
+.map-toggle-btn:hover {
+    background: var(--forecast-hover);
+}
+
+.map-locate-btn {
+    position: absolute;
+    top: 3rem;
+    right: 0.6rem;
+    z-index: 500;
+    background: var(--hint-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    width: 34px;
+    height: 34px;
+    font-size: 1.1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--shadow);
+    backdrop-filter: blur(4px);
+    transition: background 0.2s;
+    color: var(--text-primary);
+}
+.map-locate-btn:hover {
+    background: var(--forecast-hover);
+}
+.map-locate-btn.locating {
+    animation: pulse 1s infinite;
+}
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.4; }
+}
+
 /* ---- Wetter-Panel ---- */
 .weather-panel {
     width: 360px;
@@ -542,8 +597,13 @@ body {
     }
 
     .map-wrapper {
-        height: 45vh;
-        min-height: 250px;
+        height: 60vh;
+        min-height: 300px;
+        transition: height 0.3s ease;
+    }
+
+    .map-wrapper.map-expanded {
+        height: 88vh;
     }
 
     .weather-panel {

@@ -378,6 +378,37 @@ document.addEventListener('click', (e) => {
     }
 });
 
+// ---- Standort-Button ----
+const locateBtn = document.getElementById('locateBtn');
+
+locateBtn.addEventListener('click', () => {
+    if (!navigator.geolocation) {
+        alert('Dein Browser unterstützt keine Standorterkennung.');
+        return;
+    }
+    locateBtn.classList.add('locating');
+    locateBtn.title = 'Standort wird ermittelt...';
+
+    navigator.geolocation.getCurrentPosition(
+        (pos) => {
+            locateBtn.classList.remove('locating');
+            locateBtn.title = 'Meinen Standort anzeigen';
+            map.setView([pos.coords.latitude, pos.coords.longitude], 10, { animate: true });
+            loadWeatherForCoords(pos.coords.latitude, pos.coords.longitude);
+        },
+        (err) => {
+            locateBtn.classList.remove('locating');
+            locateBtn.title = 'Meinen Standort anzeigen';
+            if (err.code === err.PERMISSION_DENIED) {
+                alert('Standortzugriff wurde verweigert. Bitte erlaube den Zugriff in deinen Browser-Einstellungen.');
+            } else {
+                alert('Standort konnte nicht ermittelt werden.');
+            }
+        },
+        { timeout: 8000, enableHighAccuracy: true }
+    );
+});
+
 // ---- Retry ----
 function retryLastLocation() {
     if (lastLat !== null && lastLon !== null) {
@@ -401,6 +432,18 @@ function tryGeolocation() {
         { timeout: 5000 }
     );
 }
+
+// ---- Karten-Toggle (Smartphone) ----
+const mapToggleBtn = document.getElementById('mapToggleBtn');
+const mapWrapper   = document.querySelector('.map-wrapper');
+
+mapToggleBtn.addEventListener('click', () => {
+    const expanded = mapWrapper.classList.toggle('map-expanded');
+    mapToggleBtn.title = expanded ? 'Karte verkleinern' : 'Karte vergrößern';
+    mapToggleBtn.textContent = expanded ? '🗕' : '⛶';
+    // Leaflet muss nach Größenänderung neu gerendert werden
+    setTimeout(() => map.invalidateSize(), 320);
+});
 
 // ---- App starten ----
 initMap();
