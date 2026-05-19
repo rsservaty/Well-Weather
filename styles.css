@@ -590,6 +590,15 @@ body {
 }
 
 /* ---- Responsive ---- */
+/* Karte vergrößern — funktioniert auf allen Bildschirmen */
+.map-wrapper {
+    transition: flex 0.3s ease;
+}
+
+.map-wrapper.map-expanded {
+    flex: 4 !important;
+}
+
 @media (max-width: 768px) {
     .app-main {
         flex-direction: column;
@@ -604,6 +613,7 @@ body {
 
     .map-wrapper.map-expanded {
         height: 88vh;
+        flex: unset !important;
     }
 
     .weather-panel {
