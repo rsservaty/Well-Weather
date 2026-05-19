@@ -295,13 +295,9 @@ function renderWeather(data, cityName, lat, lon) {
 
     showState('weatherContent');
 
-    // Auf Smartphone: Karte kleiner machen damit Infos sichtbar sind
-    if (isMobile()) {
-        mapBig = false;
-        mapWrapper.style.transition = 'height 0.3s ease';
-        mapWrapper.style.height = '35vh';
-        mapToggleBtn.textContent = '⛶';
-        setTimeout(() => { mapWrapper.style.transition = ''; map.invalidateSize(); }, 320);
+    // Auf Smartphone: Panel einblenden
+    if (window.matchMedia('(max-width: 768px)').matches) {
+        showPanel();
     }
 }
 
@@ -442,78 +438,44 @@ function tryGeolocation() {
     );
 }
 
-// ---- Drag Handle & Toggle ----
+// ---- Panel Toggle (Tippen auf Handle oder Button) ----
 const dragHandle   = document.getElementById('dragHandle');
 const weatherPanel = document.getElementById('weatherPanel');
 const mapToggleBtn = document.getElementById('mapToggleBtn');
 const mapWrapper   = document.querySelector('.map-wrapper');
 
-let dragStartY  = 0;
-let dragStartH  = 0;
-let isDragging  = false;
-let mapBig      = true;  // true = Karte groß, false = Karte klein
+let panelVisible = true;
 
-function isMobile() {
-    return window.matchMedia('(max-width: 768px)').matches;
-}
-
-function setMapVh(vh) {
-    mapWrapper.style.height = vh + 'vh';
-    setTimeout(() => map.invalidateSize(), 320);
-}
-
-function snapMap(currentVh) {
-    let snap;
-    if (currentVh < 25)      { snap = 15;  mapBig = false; }
-    else if (currentVh > 65) { snap = 80;  mapBig = true;  }
-    else                     { snap = 45;  mapBig = false; }
-    mapWrapper.style.transition = 'height 0.25s ease';
-    mapWrapper.style.height = snap + 'vh';
-    mapToggleBtn.textContent = mapBig ? '🗕' : '⛶';
-    setTimeout(() => { mapWrapper.style.transition = ''; map.invalidateSize(); }, 280);
-}
-
-// Drag
-function onDragStart(clientY) {
-    if (!isMobile()) return;
-    isDragging = true;
-    dragStartY = clientY;
-    dragStartH = mapWrapper.getBoundingClientRect().height;
-    mapWrapper.style.transition = 'none';
-    document.body.style.userSelect = 'none';
-}
-
-function onDragMove(clientY) {
-    if (!isDragging) return;
-    const delta = clientY - dragStartY;
-    const vh = ((dragStartH + delta) / window.innerHeight) * 100;
-    mapWrapper.style.height = Math.min(85, Math.max(10, vh)) + 'vh';
-}
-
-function onDragEnd() {
-    if (!isDragging) return;
-    isDragging = false;
-    document.body.style.userSelect = '';
-    const currentVh = (mapWrapper.getBoundingClientRect().height / window.innerHeight) * 100;
-    snapMap(currentVh);
-}
-
-dragHandle.addEventListener('touchstart', e => onDragStart(e.touches[0].clientY), { passive: true });
-document.addEventListener('touchmove',    e => { if (isDragging) { e.preventDefault(); onDragMove(e.touches[0].clientY); } }, { passive: false });
-document.addEventListener('touchend',     () => onDragEnd());
-dragHandle.addEventListener('mousedown',  e => onDragStart(e.clientY));
-document.addEventListener('mousemove',    e => onDragMove(e.clientY));
-document.addEventListener('mouseup',      () => onDragEnd());
-
-// Toggle
-mapToggleBtn.addEventListener('click', () => {
-    if (!isMobile()) return;
-    mapBig = !mapBig;
+function setMapHeight(vh) {
     mapWrapper.style.transition = 'height 0.3s ease';
-    mapWrapper.style.height = mapBig ? '80vh' : '15vh';
-    mapToggleBtn.textContent = mapBig ? '🗕' : '⛶';
+    mapWrapper.style.height = vh + 'vh';
     setTimeout(() => { mapWrapper.style.transition = ''; map.invalidateSize(); }, 320);
-});
+}
+
+function showPanel() {
+    panelVisible = true;
+    setMapHeight(38);
+    mapToggleBtn.textContent = '🗕';
+    mapToggleBtn.title = 'Panel ausblenden';
+}
+
+function hidePanel() {
+    panelVisible = false;
+    setMapHeight(88);
+    mapToggleBtn.textContent = '⛶';
+    mapToggleBtn.title = 'Panel einblenden';
+}
+
+function togglePanel() {
+    if (panelVisible) hidePanel();
+    else showPanel();
+}
+
+// Tippen auf den Handle-Balken
+dragHandle.addEventListener('click', togglePanel);
+
+// Toggle-Button
+mapToggleBtn.addEventListener('click', togglePanel);
 
 // ---- App starten ----
 initMap();
