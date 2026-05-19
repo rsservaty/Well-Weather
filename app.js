@@ -295,11 +295,12 @@ function renderWeather(data, cityName, lat, lon) {
 
     showState('weatherContent');
 
-    // Nach Ortsauswahl: Karte klein, Infos groß
-    mapIsExpanded = false;
-    setMapHeight(38);
-    mapToggleBtn.textContent = '⛶';
-    mapToggleBtn.title = 'Karte vergrößern';
+    // Auf Smartphone: Panel auf mittlere Höhe einrasten
+    if (window.matchMedia('(max-width: 768px)').matches) {
+        weatherPanel.style.transition = 'height 0.25s ease';
+        weatherPanel.style.height = '55vh';
+        setTimeout(() => { weatherPanel.style.transition = ''; map.invalidateSize(); }, 280);
+    }
 }
 
 // ---- Suche ----
@@ -440,51 +441,54 @@ function tryGeolocation() {
 }
 
 // ---- Drag Handle (Bottom Sheet) ----
-const dragHandle = document.getElementById('dragHandle');
-let dragStartY   = 0;
-let dragStartH   = 0;
-let isDragging   = false;
+const dragHandle   = document.getElementById('dragHandle');
+const weatherPanel = document.getElementById('weatherPanel');
+let dragStartY     = 0;
+let dragStartH     = 0;
+let isDragging     = false;
 
-function getMapHeightPx() {
-    return mapWrapper.getBoundingClientRect().height;
+function getPanelHeightPx() {
+    return weatherPanel.getBoundingClientRect().height;
 }
 
-function applyMapHeightPx(px) {
-    const vh = (px / window.innerHeight) * 100;
-    const clamped = Math.min(90, Math.max(15, vh));
-    mapWrapper.style.height = clamped + 'vh';
+function setPanelHeightVh(vh) {
+    const clamped = Math.min(88, Math.max(10, vh));
+    weatherPanel.style.height = clamped + 'vh';
 }
 
 function onDragStart(clientY) {
-    if (!isMobile()) return;
     isDragging  = true;
     dragStartY  = clientY;
-    dragStartH  = getMapHeightPx();
+    dragStartH  = getPanelHeightPx();
+    weatherPanel.style.transition = 'none';
     document.body.style.userSelect = 'none';
 }
 
 function onDragMove(clientY) {
     if (!isDragging) return;
-    const delta = clientY - dragStartY;
-    applyMapHeightPx(dragStartH + delta);
+    // Nach oben ziehen = Panel größer, nach unten = kleiner
+    const delta = dragStartY - clientY;
+    const newH  = dragStartH + delta;
+    const vh    = (newH / window.innerHeight) * 100;
+    setPanelHeightVh(vh);
 }
 
-function onDragEnd(clientY) {
+function onDragEnd() {
     if (!isDragging) return;
     isDragging = false;
     document.body.style.userSelect = '';
 
-    // Einrasten: < 25vh → klein (20), > 65vh → groß (85), sonst mittig (45)
-    const currentVh = (getMapHeightPx() / window.innerHeight) * 100;
+    // Einrasten in 3 Positionen
+    const currentVh = (getPanelHeightPx() / window.innerHeight) * 100;
     let snapVh;
-    if (currentVh < 25)      snapVh = 20;
-    else if (currentVh > 65) snapVh = 85;
-    else                     snapVh = 45;
+    if (currentVh < 25)      snapVh = 12;   // fast zu → nur Handle sichtbar
+    else if (currentVh > 65) snapVh = 85;   // groß
+    else                     snapVh = 50;   // mittig
 
-    mapWrapper.style.transition = 'height 0.25s ease';
-    mapWrapper.style.height = snapVh + 'vh';
+    weatherPanel.style.transition = 'height 0.25s ease';
+    weatherPanel.style.height = snapVh + 'vh';
     setTimeout(() => {
-        mapWrapper.style.transition = '';
+        weatherPanel.style.transition = '';
         map.invalidateSize();
     }, 280);
 }
@@ -492,39 +496,16 @@ function onDragEnd(clientY) {
 // Touch Events
 dragHandle.addEventListener('touchstart', e => onDragStart(e.touches[0].clientY), { passive: true });
 document.addEventListener('touchmove',   e => { if (isDragging) { e.preventDefault(); onDragMove(e.touches[0].clientY); } }, { passive: false });
-document.addEventListener('touchend',    e => onDragEnd(e.changedTouches[0].clientY));
+document.addEventListener('touchend',    () => onDragEnd());
 
 // Mouse Events (für Desktop-Test)
 dragHandle.addEventListener('mousedown', e => onDragStart(e.clientY));
 document.addEventListener('mousemove',   e => onDragMove(e.clientY));
-document.addEventListener('mouseup',     e => onDragEnd(e.clientY));
+document.addEventListener('mouseup',     () => onDragEnd());
 
-// ---- Karten-Toggle (Smartphone) ----
+// ---- Karten-Toggle (Desktop) ----
 const mapToggleBtn = document.getElementById('mapToggleBtn');
 const mapWrapper   = document.querySelector('.map-wrapper');
-
-let mapIsExpanded = false;
-
-const isMobile = () => window.matchMedia('(max-width: 768px)').matches;
-
-function setMapHeight(vh) {
-    if (!isMobile()) return;
-    mapWrapper.style.height = vh + 'vh';
-    setTimeout(() => map.invalidateSize(), 360);
-}
-
-mapToggleBtn.addEventListener('click', () => {
-    mapIsExpanded = !mapIsExpanded;
-    if (mapIsExpanded) {
-        setMapHeight(90);
-        mapToggleBtn.textContent = '🗕';
-        mapToggleBtn.title = 'Karte verkleinern';
-    } else {
-        setMapHeight(38);
-        mapToggleBtn.textContent = '⛶';
-        mapToggleBtn.title = 'Karte vergrößern';
-    }
-});
 
 // ---- App starten ----
 initMap();

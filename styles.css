@@ -640,34 +640,41 @@ body {
 }
 
 @media (max-width: 768px) {
+    /* Karte füllt gesamten Hintergrund */
     .app-main {
-        flex-direction: column;
-        overflow: auto;
+        position: relative;
+        flex: 1;
+        overflow: hidden;
     }
 
     .map-wrapper {
-        height: 72vh;
-        min-height: 200px;
-        transition: height 0.35s ease;
+        position: absolute !important;
+        top: 0; left: 0; right: 0; bottom: 0;
+        height: 100% !important;
+        min-height: unset !important;
     }
 
-    /* Nach Ortsauswahl: Karte klein, Infos groß */
-    .map-wrapper.weather-shown {
-        height: 38vh;
+    .map-toggle-btn {
+        display: none;
     }
 
-    /* Karte wieder groß (Expand-Button) */
-    .map-wrapper.map-expanded {
-        height: 92vh !important;
-    }
-
+    /* Bottom Sheet */
     .weather-panel {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
         width: 100%;
-        min-width: unset;
+        height: 50vh;
+        border-radius: 16px 16px 0 0;
         border-left: none;
-        border-top: 1px solid var(--border);
-        min-height: unset;
-        background: var(--bg-primary);
+        border-top: none;
+        box-shadow: 0 -6px 24px rgba(0,0,0,0.2);
+        z-index: 600;
+        overflow-y: auto;
+        min-width: unset;
+        background: var(--bg-secondary);
+        transition: height 0.25s ease;
     }
 
     .app-header {
