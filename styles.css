@@ -655,8 +655,7 @@ body {
     }
 
     .map-toggle-btn {
-        top: auto;
-        bottom: calc(50vh + 0.6rem);
+        top: 0.6rem;
         right: 0.6rem;
     }
 

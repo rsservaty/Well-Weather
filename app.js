@@ -511,17 +511,10 @@ let panelExpanded = false;
 
 mapToggleBtn.addEventListener('click', () => {
     panelExpanded = !panelExpanded;
-    weatherPanel.style.transition = 'height 0.25s ease';
-    if (panelExpanded) {
-        weatherPanel.style.height = '85vh';
-        mapToggleBtn.textContent  = '🗕';
-        mapToggleBtn.title        = 'Panel verkleinern';
-    } else {
-        weatherPanel.style.height = '12vh';
-        mapToggleBtn.textContent  = '⛶';
-        mapToggleBtn.title        = 'Panel vergrößern';
-    }
-    setTimeout(() => { weatherPanel.style.transition = ''; map.invalidateSize(); }, 280);
+    weatherPanel.style.transition = 'height 0.3s ease';
+    weatherPanel.style.height = panelExpanded ? '85vh' : '12vh';
+    mapToggleBtn.textContent  = panelExpanded ? '🗕' : '⛶';
+    setTimeout(() => { weatherPanel.style.transition = ''; map.invalidateSize(); }, 320);
 });
 
 // ---- App starten ----
