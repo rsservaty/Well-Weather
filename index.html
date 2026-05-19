@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Wetter Europa</title>
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <!-- App CSS -->
+    <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+    <!-- ===== HEADER ===== -->
+    <header class="app-header">
+        <div class="header-left">
+            <span class="logo">&#9928;</span>
+            <h1>Wetter Europa</h1>
+        </div>
+        <div class="search-container">
+            <input
+                type="text"
+                id="searchInput"
+                class="search-input"
+                placeholder="Stadt suchen... (z.B. München, Wien, Zürich)"
+                autocomplete="off"
+            />
+            <button id="searchBtn" class="search-btn" title="Suchen">&#128269;</button>
+            <ul id="searchResults" class="search-results hidden"></ul>
+        </div>
+        <div class="header-right">
+            <span id="lastUpdate" class="last-update"></span>
+        </div>
+    </header>
+
+    <!-- ===== MAIN ===== -->
+    <main class="app-main">
+
+        <!-- Karte -->
+        <div class="map-wrapper">
+            <div id="map"></div>
+            <div class="map-hint">&#128205; Klick auf die Karte für Wetterdaten</div>
+        </div>
+
+        <!-- Wetter-Panel -->
+        <aside class="weather-panel" id="weatherPanel">
+
+            <!-- Willkommens-State -->
+            <div class="welcome-state" id="welcomeState">
+                <div class="welcome-icon">&#9928;</div>
+                <h2>Willkommen!</h2>
+                <p>Klicke auf einen Ort in der Karte oder suche eine Stadt, um das Wetter anzuzeigen.</p>
+            </div>
+
+            <!-- Ladeindikator -->
+            <div class="loading-state hidden" id="loadingState">
+                <div class="spinner"></div>
+                <p>Wetterdaten werden geladen...</p>
+            </div>
+
+            <!-- Fehler-State -->
+            <div class="error-state hidden" id="errorState">
+                <div class="error-icon">&#9888;</div>
+                <p id="errorMessage">Fehler beim Laden der Wetterdaten.</p>
+                <button onclick="retryLastLocation()" class="retry-btn">Nochmal versuchen</button>
+            </div>
+
+            <!-- Wetter-Inhalt -->
+            <div class="weather-content hidden" id="weatherContent">
+
+                <!-- Ort & Aktuell -->
+                <div class="current-weather">
+                    <div class="location-info">
+                        <h2 id="locationName">-</h2>
+                        <span id="locationCountry" class="country-badge"></span>
+                    </div>
+                    <div class="current-main">
+                        <span id="currentIcon" class="weather-icon-large"></span>
+                        <div class="current-temp-block">
+                            <span id="currentTemp" class="current-temp">-</span>
+                            <span id="currentDesc" class="current-desc">-</span>
+                        </div>
+                    </div>
+                    <div class="current-details">
+                        <div class="detail-item">
+                            <span class="detail-label">&#127754; Gefühlt</span>
+                            <span id="feelsLike" class="detail-value">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">&#128167; Niederschlag</span>
+                            <span id="precipitation" class="detail-value">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">&#128168; Wind</span>
+                            <span id="windSpeed" class="detail-value">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">&#128065; Sichtweite</span>
+                            <span id="humidity" class="detail-value">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Divider -->
+                <div class="section-divider">
+                    <span>7-Tage-Vorhersage</span>
+                </div>
+
+                <!-- 7-Tage-Vorhersage -->
+                <div class="forecast-grid" id="forecastGrid">
+                    <!-- Wird per JS befüllt -->
+                </div>
+
+            </div>
+        </aside>
+    </main>
+
+    <!-- ===== FOOTER ===== -->
+    <footer class="app-footer">
+        <span>Wetterdaten: <a href="https://open-meteo.com" target="_blank">Open-Meteo</a> (basierend auf DWD &amp; ECMWF)</span>
+        <span>Karte: <a href="https://www.openstreetmap.org" target="_blank">OpenStreetMap</a></span>
+        <span>Geocoding: <a href="https://nominatim.org" target="_blank">Nominatim</a></span>
+    </footer>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <!-- App JS -->
+    <script src="app.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,612 @@
+/* =====================================================
+   WETTER EUROPA — Stylesheet
+   Automatischer Dark/Light Mode via prefers-color-scheme
+   ===================================================== */
+
+/* ---- CSS-Variablen ---- */
+:root {
+    --bg-primary:       #f0f4f8;
+    --bg-secondary:     #ffffff;
+    --bg-card:          #ffffff;
+    --bg-header:        #1a73e8;
+    --bg-header-text:   #ffffff;
+    --text-primary:     #1a202c;
+    --text-secondary:   #4a5568;
+    --text-muted:       #718096;
+    --border:           #e2e8f0;
+    --accent:           #1a73e8;
+    --accent-hover:     #1558b0;
+    --forecast-bg:      #f7fafc;
+    --forecast-hover:   #edf2f7;
+    --shadow:           0 2px 12px rgba(0,0,0,0.08);
+    --shadow-card:      0 4px 20px rgba(0,0,0,0.1);
+    --radius:           12px;
+    --radius-sm:        8px;
+    --today-border:     #1a73e8;
+    --today-bg:         #ebf3ff;
+    --spinner-color:    #1a73e8;
+    --footer-bg:        #e2e8f0;
+    --footer-text:      #718096;
+    --badge-bg:         #e8f0fe;
+    --badge-text:       #1a73e8;
+    --divider-color:    #e2e8f0;
+    --hint-bg:          rgba(255,255,255,0.85);
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg-primary:       #0f1117;
+        --bg-secondary:     #1a1d27;
+        --bg-card:          #1e2130;
+        --bg-header:        #111827;
+        --bg-header-text:   #f0f4f8;
+        --text-primary:     #e2e8f0;
+        --text-secondary:   #a0aec0;
+        --text-muted:       #718096;
+        --border:           #2d3748;
+        --accent:           #4299e1;
+        --accent-hover:     #63b3ed;
+        --forecast-bg:      #1a1d27;
+        --forecast-hover:   #252839;
+        --shadow:           0 2px 12px rgba(0,0,0,0.4);
+        --shadow-card:      0 4px 20px rgba(0,0,0,0.5);
+        --today-border:     #4299e1;
+        --today-bg:         #1a2744;
+        --spinner-color:    #4299e1;
+        --footer-bg:        #111827;
+        --footer-text:      #4a5568;
+        --badge-bg:         #1a2744;
+        --badge-text:       #63b3ed;
+        --divider-color:    #2d3748;
+        --hint-bg:          rgba(30,33,48,0.9);
+    }
+}
+
+/* ---- Reset & Basis ---- */
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html, body {
+    height: 100%;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    font-size: 15px;
+    line-height: 1.5;
+}
+
+a {
+    color: var(--accent);
+    text-decoration: none;
+}
+a:hover { text-decoration: underline; }
+
+/* ---- Layout ---- */
+body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.app-header {
+    background: var(--bg-header);
+    color: var(--bg-header-text);
+    padding: 0.75rem 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    box-shadow: var(--shadow);
+    z-index: 1000;
+    flex-wrap: wrap;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex-shrink: 0;
+}
+
+.logo {
+    font-size: 1.6rem;
+}
+
+.app-header h1 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    white-space: nowrap;
+}
+
+.header-right {
+    margin-left: auto;
+    flex-shrink: 0;
+}
+
+.last-update {
+    font-size: 0.75rem;
+    opacity: 0.75;
+    white-space: nowrap;
+}
+
+/* ---- Suche ---- */
+.search-container {
+    position: relative;
+    flex: 1;
+    max-width: 420px;
+    min-width: 200px;
+}
+
+.search-input {
+    width: 100%;
+    padding: 0.55rem 2.8rem 0.55rem 1rem;
+    border: 2px solid transparent;
+    border-radius: 50px;
+    background: rgba(255,255,255,0.15);
+    color: var(--bg-header-text);
+    font-size: 0.9rem;
+    outline: none;
+    transition: background 0.2s, border-color 0.2s;
+}
+
+.search-input::placeholder { color: rgba(255,255,255,0.6); }
+
+.search-input:focus {
+    background: rgba(255,255,255,0.25);
+    border-color: rgba(255,255,255,0.5);
+}
+
+.search-btn {
+    position: absolute;
+    right: 0.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--bg-header-text);
+    font-size: 1rem;
+    cursor: pointer;
+    padding: 0.2rem 0.4rem;
+    opacity: 0.8;
+    transition: opacity 0.2s;
+}
+.search-btn:hover { opacity: 1; }
+
+.search-results {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-card);
+    z-index: 2000;
+    list-style: none;
+    max-height: 260px;
+    overflow-y: auto;
+}
+
+.search-results li {
+    padding: 0.65rem 1rem;
+    cursor: pointer;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+}
+.search-results li:last-child { border-bottom: none; }
+.search-results li:hover { background: var(--forecast-hover); }
+
+.search-results .result-country {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    margin-left: 0.4rem;
+}
+
+/* ---- Main-Layout ---- */
+.app-main {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+    min-height: 0;
+}
+
+/* ---- Karte ---- */
+.map-wrapper {
+    flex: 1;
+    position: relative;
+    min-height: 400px;
+}
+
+#map {
+    width: 100%;
+    height: 100%;
+}
+
+.map-hint {
+    position: absolute;
+    bottom: 1rem;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--hint-bg);
+    color: var(--text-secondary);
+    padding: 0.4rem 1rem;
+    border-radius: 50px;
+    font-size: 0.8rem;
+    backdrop-filter: blur(4px);
+    pointer-events: none;
+    z-index: 500;
+    white-space: nowrap;
+    box-shadow: var(--shadow);
+}
+
+/* ---- Wetter-Panel ---- */
+.weather-panel {
+    width: 360px;
+    min-width: 300px;
+    background: var(--bg-secondary);
+    border-left: 1px solid var(--border);
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ---- States ---- */
+.welcome-state,
+.loading-state,
+.error-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    padding: 2rem;
+    text-align: center;
+    gap: 1rem;
+    color: var(--text-secondary);
+}
+
+.welcome-icon {
+    font-size: 4rem;
+    line-height: 1;
+}
+
+.welcome-state h2 {
+    font-size: 1.3rem;
+    color: var(--text-primary);
+}
+
+.welcome-state p {
+    font-size: 0.9rem;
+    line-height: 1.6;
+    max-width: 240px;
+}
+
+.error-icon {
+    font-size: 2.5rem;
+}
+
+.retry-btn {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    padding: 0.5rem 1.2rem;
+    border-radius: 50px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: background 0.2s;
+}
+.retry-btn:hover { background: var(--accent-hover); }
+
+/* ---- Spinner ---- */
+.spinner {
+    width: 36px;
+    height: 36px;
+    border: 3px solid var(--border);
+    border-top-color: var(--spinner-color);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* ---- Wetter-Inhalt ---- */
+.weather-content {
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+/* Aktuelles Wetter */
+.current-weather {
+    background: var(--bg-card);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.location-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.location-info h2 {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.country-badge {
+    background: var(--badge-bg);
+    color: var(--badge-text);
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.2rem 0.6rem;
+    border-radius: 50px;
+}
+
+.current-main {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.weather-icon-large {
+    font-size: 3.5rem;
+    line-height: 1;
+}
+
+.current-temp-block {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+}
+
+.current-temp {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1;
+}
+
+.current-desc {
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+}
+
+.current-details {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.6rem;
+}
+
+.detail-item {
+    background: var(--bg-primary);
+    border-radius: var(--radius-sm);
+    padding: 0.5rem 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+.detail-label {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.detail-value {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+/* Divider */
+.section-divider {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.section-divider::before,
+.section-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--divider-color);
+}
+
+/* 7-Tage-Vorhersage */
+.forecast-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.forecast-card {
+    background: var(--forecast-bg);
+    border-radius: var(--radius-sm);
+    padding: 0.75rem 1rem;
+    display: grid;
+    grid-template-columns: 80px 2rem 1fr auto;
+    align-items: center;
+    gap: 0.75rem;
+    cursor: default;
+    transition: background 0.15s;
+    border: 2px solid transparent;
+}
+
+.forecast-card:hover {
+    background: var(--forecast-hover);
+}
+
+.forecast-card.today {
+    border-color: var(--today-border);
+    background: var(--today-bg);
+}
+
+.forecast-day {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.forecast-card.today .forecast-day {
+    color: var(--accent);
+    font-weight: 700;
+}
+
+.forecast-icon {
+    font-size: 1.4rem;
+    text-align: center;
+}
+
+.forecast-bar-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.forecast-desc {
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.forecast-precip {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+}
+
+.forecast-temps {
+    text-align: right;
+    white-space: nowrap;
+}
+
+.temp-max {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.temp-min {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-left: 0.3rem;
+}
+
+/* ---- Footer ---- */
+.app-footer {
+    background: var(--footer-bg);
+    color: var(--footer-text);
+    padding: 0.6rem 1.5rem;
+    font-size: 0.78rem;
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    border-top: 1px solid var(--border);
+}
+
+/* ---- Utility ---- */
+.hidden {
+    display: none !important;
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 768px) {
+    .app-main {
+        flex-direction: column;
+        overflow: auto;
+    }
+
+    .map-wrapper {
+        height: 45vh;
+        min-height: 250px;
+    }
+
+    .weather-panel {
+        width: 100%;
+        min-width: unset;
+        border-left: none;
+        border-top: 1px solid var(--border);
+        min-height: unset;
+    }
+
+    .app-header {
+        gap: 0.75rem;
+    }
+
+    .search-container {
+        min-width: 150px;
+    }
+
+    .last-update {
+        display: none;
+    }
+
+    .forecast-card {
+        grid-template-columns: 65px 1.8rem 1fr auto;
+        gap: 0.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .app-header h1 {
+        font-size: 1rem;
+    }
+
+    .weather-content {
+        padding: 1rem;
+    }
+}
+
+/* ---- Leaflet Anpassungen ---- */
+.leaflet-popup-content-wrapper {
+    border-radius: var(--radius-sm) !important;
+    box-shadow: var(--shadow-card) !important;
+}
+
+.weather-marker-popup {
+    text-align: center;
+    font-family: inherit;
+    min-width: 120px;
+}
+
+.weather-marker-popup .popup-city {
+    font-weight: 700;
+    font-size: 1rem;
+    color: #1a202c;
+}
+
+.weather-marker-popup .popup-temp {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1a73e8;
+}
+
+.weather-marker-popup .popup-icon {
+    font-size: 2rem;
+    line-height: 1;
+}
