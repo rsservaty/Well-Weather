@@ -640,9 +640,15 @@ body {
 }
 
 @media (max-width: 768px) {
+    html, body {
+        overflow: hidden;
+        height: 100%;
+    }
+
     .app-main {
         flex-direction: column;
-        overflow: auto;
+        overflow: hidden;
+        flex: 1;
     }
 
     .map-wrapper {
@@ -666,7 +672,9 @@ body {
         min-width: unset;
         border-left: none;
         border-top: 1px solid var(--border);
-        min-height: unset;
+        min-height: 0;
+        flex: 1;
+        overflow-y: auto;
     }
 
     .app-header {
