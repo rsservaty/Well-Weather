@@ -606,14 +606,19 @@ body {
     }
 
     .map-wrapper {
-        height: 60vh;
-        min-height: 300px;
-        transition: height 0.3s ease;
+        height: 72vh;
+        min-height: 200px;
+        transition: height 0.35s ease;
     }
 
+    /* Nach Ortsauswahl: Karte klein, Infos groß */
+    .map-wrapper.weather-shown {
+        height: 38vh;
+    }
+
+    /* Karte wieder groß (Expand-Button) */
     .map-wrapper.map-expanded {
-        height: 88vh;
-        flex: unset !important;
+        height: 92vh !important;
     }
 
     .weather-panel {

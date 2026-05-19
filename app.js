@@ -294,6 +294,14 @@ function renderWeather(data, cityName, lat, lon) {
     els.lastUpdate.textContent = `Stand: ${now.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })} Uhr`;
 
     showState('weatherContent');
+
+    // Auf Smartphone: Karte klein, Infos groß
+    if (window.innerWidth <= 768) {
+        mapWrapper.classList.remove('map-expanded');
+        mapWrapper.classList.add('weather-shown');
+        mapToggleBtn.textContent = '⛶';
+        setTimeout(() => map.invalidateSize(), 360);
+    }
 }
 
 // ---- Suche ----
@@ -441,9 +449,20 @@ mapToggleBtn.addEventListener('click', () => {
     const expanded = mapWrapper.classList.toggle('map-expanded');
     mapToggleBtn.title = expanded ? 'Karte verkleinern' : 'Karte vergrößern';
     mapToggleBtn.textContent = expanded ? '🗕' : '⛶';
-    // Leaflet muss nach Größenänderung neu gerendert werden
-    setTimeout(() => map.invalidateSize(), 320);
+    if (expanded) {
+        // Karte groß → weather-shown entfernen
+        mapWrapper.classList.remove('weather-shown');
+    }
+    setTimeout(() => map.invalidateSize(), 360);
 });
+
+// Hilfsfunktion: Karte auf "Suchmodus" zurücksetzen
+function showMapMode() {
+    mapWrapper.classList.remove('weather-shown');
+    mapWrapper.classList.remove('map-expanded');
+    mapToggleBtn.textContent = '⛶';
+    setTimeout(() => map.invalidateSize(), 360);
+}
 
 // ---- App starten ----
 initMap();
