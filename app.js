@@ -295,11 +295,13 @@ function renderWeather(data, cityName, lat, lon) {
 
     showState('weatherContent');
 
-    // Auf Smartphone: Panel auf mittlere Höhe einrasten
-    if (window.matchMedia('(max-width: 768px)').matches) {
-        weatherPanel.style.transition = 'height 0.25s ease';
-        weatherPanel.style.height = '55vh';
-        setTimeout(() => { weatherPanel.style.transition = ''; map.invalidateSize(); }, 280);
+    // Auf Smartphone: Karte kleiner machen damit Infos sichtbar sind
+    if (isMobile()) {
+        mapBig = false;
+        mapWrapper.style.transition = 'height 0.3s ease';
+        mapWrapper.style.height = '35vh';
+        mapToggleBtn.textContent = '⛶';
+        setTimeout(() => { mapWrapper.style.transition = ''; map.invalidateSize(); }, 320);
     }
 }
 
@@ -440,81 +442,77 @@ function tryGeolocation() {
     );
 }
 
-// ---- Drag Handle (Bottom Sheet) ----
+// ---- Drag Handle & Toggle ----
 const dragHandle   = document.getElementById('dragHandle');
 const weatherPanel = document.getElementById('weatherPanel');
-let dragStartY     = 0;
-let dragStartH     = 0;
-let isDragging     = false;
+const mapToggleBtn = document.getElementById('mapToggleBtn');
+const mapWrapper   = document.querySelector('.map-wrapper');
 
-function getPanelHeightPx() {
-    return weatherPanel.getBoundingClientRect().height;
+let dragStartY  = 0;
+let dragStartH  = 0;
+let isDragging  = false;
+let mapBig      = true;  // true = Karte groß, false = Karte klein
+
+function isMobile() {
+    return window.matchMedia('(max-width: 768px)').matches;
 }
 
-function setPanelHeightVh(vh) {
-    const clamped = Math.min(88, Math.max(10, vh));
-    weatherPanel.style.height = clamped + 'vh';
+function setMapVh(vh) {
+    mapWrapper.style.height = vh + 'vh';
+    setTimeout(() => map.invalidateSize(), 320);
 }
 
+function snapMap(currentVh) {
+    let snap;
+    if (currentVh < 25)      { snap = 15;  mapBig = false; }
+    else if (currentVh > 65) { snap = 80;  mapBig = true;  }
+    else                     { snap = 45;  mapBig = false; }
+    mapWrapper.style.transition = 'height 0.25s ease';
+    mapWrapper.style.height = snap + 'vh';
+    mapToggleBtn.textContent = mapBig ? '🗕' : '⛶';
+    setTimeout(() => { mapWrapper.style.transition = ''; map.invalidateSize(); }, 280);
+}
+
+// Drag
 function onDragStart(clientY) {
-    isDragging  = true;
-    dragStartY  = clientY;
-    dragStartH  = getPanelHeightPx();
-    weatherPanel.style.transition = 'none';
+    if (!isMobile()) return;
+    isDragging = true;
+    dragStartY = clientY;
+    dragStartH = mapWrapper.getBoundingClientRect().height;
+    mapWrapper.style.transition = 'none';
     document.body.style.userSelect = 'none';
 }
 
 function onDragMove(clientY) {
     if (!isDragging) return;
-    // Nach oben ziehen = Panel größer, nach unten = kleiner
-    const delta = dragStartY - clientY;
-    const newH  = dragStartH + delta;
-    const vh    = (newH / window.innerHeight) * 100;
-    setPanelHeightVh(vh);
+    const delta = clientY - dragStartY;
+    const vh = ((dragStartH + delta) / window.innerHeight) * 100;
+    mapWrapper.style.height = Math.min(85, Math.max(10, vh)) + 'vh';
 }
 
 function onDragEnd() {
     if (!isDragging) return;
     isDragging = false;
     document.body.style.userSelect = '';
-
-    // Einrasten in 3 Positionen
-    const currentVh = (getPanelHeightPx() / window.innerHeight) * 100;
-    let snapVh;
-    if (currentVh < 25)      snapVh = 12;   // fast zu → nur Handle sichtbar
-    else if (currentVh > 65) snapVh = 85;   // groß
-    else                     snapVh = 50;   // mittig
-
-    weatherPanel.style.transition = 'height 0.25s ease';
-    weatherPanel.style.height = snapVh + 'vh';
-    setTimeout(() => {
-        weatherPanel.style.transition = '';
-        map.invalidateSize();
-    }, 280);
+    const currentVh = (mapWrapper.getBoundingClientRect().height / window.innerHeight) * 100;
+    snapMap(currentVh);
 }
 
-// Touch Events
 dragHandle.addEventListener('touchstart', e => onDragStart(e.touches[0].clientY), { passive: true });
-document.addEventListener('touchmove',   e => { if (isDragging) { e.preventDefault(); onDragMove(e.touches[0].clientY); } }, { passive: false });
-document.addEventListener('touchend',    () => onDragEnd());
+document.addEventListener('touchmove',    e => { if (isDragging) { e.preventDefault(); onDragMove(e.touches[0].clientY); } }, { passive: false });
+document.addEventListener('touchend',     () => onDragEnd());
+dragHandle.addEventListener('mousedown',  e => onDragStart(e.clientY));
+document.addEventListener('mousemove',    e => onDragMove(e.clientY));
+document.addEventListener('mouseup',      () => onDragEnd());
 
-// Mouse Events (für Desktop-Test)
-dragHandle.addEventListener('mousedown', e => onDragStart(e.clientY));
-document.addEventListener('mousemove',   e => onDragMove(e.clientY));
-document.addEventListener('mouseup',     () => onDragEnd());
-
-// ---- Toggle-Button ----
-const mapToggleBtn = document.getElementById('mapToggleBtn');
-const mapWrapper   = document.querySelector('.map-wrapper');
-
-let panelExpanded = false;
-
+// Toggle
 mapToggleBtn.addEventListener('click', () => {
-    panelExpanded = !panelExpanded;
-    weatherPanel.style.transition = 'height 0.3s ease';
-    weatherPanel.style.height = panelExpanded ? '85vh' : '12vh';
-    mapToggleBtn.textContent  = panelExpanded ? '🗕' : '⛶';
-    setTimeout(() => { weatherPanel.style.transition = ''; map.invalidateSize(); }, 320);
+    if (!isMobile()) return;
+    mapBig = !mapBig;
+    mapWrapper.style.transition = 'height 0.3s ease';
+    mapWrapper.style.height = mapBig ? '80vh' : '15vh';
+    mapToggleBtn.textContent = mapBig ? '🗕' : '⛶';
+    setTimeout(() => { mapWrapper.style.transition = ''; map.invalidateSize(); }, 320);
 });
 
 // ---- App starten ----
