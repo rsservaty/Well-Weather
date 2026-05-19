@@ -254,6 +254,51 @@ function renderWeather(data, cityName, lat, lon) {
         els.humidity.textContent = '—';
     }
 
+    // ---- Stündliche Vorhersage (nächste 24h) ----
+    const hourly      = data.hourly;
+    const nowHour     = new Date().toISOString().slice(0, 13); // z.B. "2025-05-19T14"
+    const startIdx    = (hourly.time || []).findIndex(t => t.startsWith(nowHour));
+    const fromIdx     = startIdx >= 0 ? startIdx : 0;
+    const hourlySlice = (hourly.time || []).slice(fromIdx, fromIdx + 24);
+
+    // Container erzeugen (oder vorhandenen leeren)
+    let hourlySection = document.getElementById('hourlySection');
+    if (!hourlySection) {
+        hourlySection = document.createElement('div');
+        hourlySection.id = 'hourlySection';
+        // Nach current-weather einfügen
+        const currentWeatherEl = document.querySelector('.current-weather');
+        currentWeatherEl.insertAdjacentElement('afterend', hourlySection);
+    }
+
+    hourlySection.innerHTML = `
+        <div class="section-divider"><span>Nächste 24 Stunden</span></div>
+        <div class="hourly-scroll">
+            <div class="hourly-strip" id="hourlyStrip"></div>
+        </div>
+    `;
+
+    const strip = document.getElementById('hourlyStrip');
+    hourlySlice.forEach((timeStr, i) => {
+        const idx      = fromIdx + i;
+        const code     = hourly.weather_code[idx];
+        const temp     = hourly.temperature_2m[idx];
+        const prec     = hourly.precipitation[idx];
+        const wmoH     = getWMO(code);
+        const hour     = timeStr.slice(11, 16); // "14:00"
+        const isNow    = i === 0;
+
+        const card = document.createElement('div');
+        card.className = 'hourly-card' + (isNow ? ' current-hour' : '');
+        card.innerHTML = `
+            <div class="hourly-time">${isNow ? 'Jetzt' : hour}</div>
+            <div class="hourly-icon">${wmoH.icon}</div>
+            <div class="hourly-temp">${Math.round(temp)}°</div>
+            ${prec > 0 ? `<div class="hourly-precip">💧${prec.toFixed(1)}</div>` : ''}
+        `;
+        strip.appendChild(card);
+    });
+
     // Marker aktualisieren
     setMarker(lat, lon, cityName);
 

@@ -505,6 +505,68 @@ body {
     color: var(--text-primary);
 }
 
+/* ---- Stündliche Vorhersage ---- */
+.hourly-scroll {
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 0.25rem;
+}
+.hourly-scroll::-webkit-scrollbar { display: none; }
+
+.hourly-strip {
+    display: flex;
+    gap: 0.5rem;
+    padding: 0.25rem 0.1rem;
+    width: max-content;
+}
+
+.hourly-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.2rem;
+    background: var(--forecast-bg);
+    border-radius: var(--radius-sm);
+    padding: 0.5rem 0.6rem;
+    min-width: 52px;
+    cursor: default;
+    border: 2px solid transparent;
+    transition: background 0.15s;
+}
+
+.hourly-card:hover { background: var(--forecast-hover); }
+
+.hourly-card.current-hour {
+    border-color: var(--today-border);
+    background: var(--today-bg);
+}
+
+.hourly-time {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+.hourly-card.current-hour .hourly-time {
+    color: var(--accent);
+}
+
+.hourly-icon { font-size: 1.2rem; line-height: 1; }
+
+.hourly-temp {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.hourly-precip {
+    font-size: 0.7rem;
+    color: var(--accent);
+    font-weight: 500;
+}
+
 /* Divider */
 .section-divider {
     display: flex;
