@@ -529,6 +529,5 @@ mapToggleBtn.addEventListener('click', togglePanel);
 
 // ---- App starten ----
 initMap();
-// Optionaler Standort beim Laden (Browser fragt nach Erlaubnis)
-// tryGeolocation();
-// Standardmäßig auskommentiert - kann Roland selbst aktivieren
+// Standort beim Laden automatisch ermitteln (Browser fragt nach Erlaubnis)
+tryGeolocation();
