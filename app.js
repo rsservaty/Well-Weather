@@ -256,7 +256,9 @@ function renderWeather(data, cityName, lat, lon) {
 
     // ---- Stündliche Vorhersage (nächste 24h) ----
     const hourly      = data.hourly;
-    const nowHour     = new Date().toISOString().slice(0, 13); // z.B. "2025-05-19T14"
+    const _now = new Date();
+    const _pad = n => String(n).padStart(2, '0');
+    const nowHour = `${_now.getFullYear()}-${_pad(_now.getMonth()+1)}-${_pad(_now.getDate())}T${_pad(_now.getHours())}`; // lokale Zeit
     const startIdx    = (hourly.time || []).findIndex(t => t.startsWith(nowHour));
     const fromIdx     = startIdx >= 0 ? startIdx : 0;
     const hourlySlice = (hourly.time || []).slice(fromIdx, fromIdx + 24);
