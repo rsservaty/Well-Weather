@@ -883,6 +883,7 @@ function renderUV(data) {
 
         // SVG-Bogen
         const arcColor = getComputedStyle(document.documentElement).getPropertyValue('--border').trim() || 'rgba(148,163,184,0.2)';
+        const pad = n => String(n).padStart(2, '0');
         const locTimeStr = pad(nowAtLoc.getUTCHours()) + ':' + pad(nowAtLoc.getUTCMinutes());
         arcHtml = `<svg class="sun-arc-svg" viewBox="0 0 300 110">
             <path d="M ${cx-r} ${cy} A ${r} ${r} 0 0 1 ${cx+r} ${cy}" fill="none" stroke="rgba(148,163,184,0.25)" stroke-width="3"/>
