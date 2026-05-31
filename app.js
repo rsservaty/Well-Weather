@@ -193,6 +193,7 @@ async function loadWeatherForCoords(lat, lon, cityName) {
             'visibility',
             'weather_code',
             'pressure_msl',
+            'relative_humidity_2m',
         ].join(','),
         current:     [
             'temperature_2m',
@@ -1138,15 +1139,93 @@ function renderBio(data, airData) {
         return              { label: 'Hoch',   color: '#ef4444', bg: 'rgba(239,68,68,0.1)',   dot: '🔴' };
     }
 
-    function bioCard(icon, title, score, hint) {
+    // Stündliche Scores für nächste 24h
+    function calcHourlyScore(cat, i) {
+        const t  = (hourly.temperature_2m    || [])[i] ?? null;
+        const w  = (hourly.wind_speed_10m    || [])[i] ?? 0;
+        const pr = (hourly.precipitation     || [])[i] ?? 0;
+        const wc = (hourly.weather_code      || [])[i] ?? 0;
+        const h  = (hourly.relative_humidity_2m || [])[i] ?? null;
+        const th = wc >= 95;
+        switch (cat) {
+            case 'sport': {
+                let s = 0;
+                if (th) s += 2;
+                if (t != null && (t < 2 || t > 35)) s += 2;
+                else if (t != null && (t < 8 || t > 30)) s += 1;
+                if (w > 50) s += 2; else if (w > 30) s += 1;
+                if (pr > 0.5) s += 1;
+                if (h != null && h > 85) s += 1;
+                return Math.min(s, 2);
+            }
+            case 'schlaf': {
+                let s = 0;
+                if (h != null && h > 80) s += 1;
+                if (t != null && t > 22) s += 1;
+                if (t != null && t > 26) s += 1;
+                if (th) s += 1;
+                return Math.min(s, 2);
+            }
+            case 'kreislauf':
+                return Math.min(kreislauf, 2);
+            case 'migraene': {
+                let s = 0;
+                if (pressureDiff < -5) s += 2; else if (pressureDiff < -2) s += 1;
+                if (th) s += 1;
+                if (isFoehn) s += 1;
+                return Math.min(s, 2);
+            }
+            case 'gelenke': {
+                let s = 0;
+                if (t != null && t < 10 && pressureDiff < -3) s += 2;
+                else if (pressureDiff < -3) s += 1;
+                if (h != null && h > 80 && t != null && t < 12) s += 1;
+                return Math.min(s, 2);
+            }
+            case 'atemwege': {
+                let s = 0;
+                if (maxPollen > 30) s += 2; else if (maxPollen > 10) s += 1;
+                if (h != null && h < 30) s += 1;
+                return Math.min(s, 2);
+            }
+            default: return 0;
+        }
+    }
+
+    function hourlyBar(cat) {
+        const colors = ['#22c55e', '#eab308', '#ef4444'];
+        let html = '<div class="bio-hourly">';
+        for (let i = hIdx; i < hIdx + 24 && i < times.length; i++) {
+            const s = calcHourlyScore(cat, i);
+            const t = times[i].slice(11, 16);
+            html += `<div class="bio-hour-block" style="background:${colors[s]}20;border-top:3px solid ${colors[s]}">
+                <span class="bio-hour-time">${t}</span>
+            </div>`;
+        }
+        html += '</div>';
+        return html;
+    }
+
+    function bioCard(icon, title, score, hint, cat) {
         const a = ampel(score);
-        return `<div class="bio-card" style="border-left:3px solid ${a.color};background:${a.bg}">
+        const detailId = 'bio-detail-' + cat;
+        return `<div class="bio-card" style="border-left:3px solid ${a.color};background:${a.bg}" onclick="
+            const d=document.getElementById('${detailId}');
+            const arr=this.querySelector('.bio-arrow');
+            if(d.style.display==='none'||!d.style.display){d.style.display='block';arr.textContent='▲';}
+            else{d.style.display='none';arr.textContent='▼';}
+        ">
             <div class="bio-card-header">
                 <span class="bio-icon">${icon}</span>
                 <span class="bio-title">${title}</span>
                 <span class="bio-level" style="color:${a.color}">${a.dot} ${a.label}</span>
+                <span class="bio-arrow">▼</span>
             </div>
             <div class="bio-hint">${hint}</div>
+            <div id="${detailId}" style="display:none">
+                <div class="bio-detail-label">24h Vorschau</div>
+                ${hourlyBar(cat)}
+            </div>
         </div>`;
     }
 
@@ -1209,12 +1288,12 @@ function renderBio(data, airData) {
                 <span>Feuchte: <strong>${humidity != null ? humidity + ' %' : '—'}</strong></span>
                 <span>Tagesschwankung: <strong>${tSwing.toFixed(1)} °C</strong></span>
             </div>
-            ${bioCard('🏃', 'Outdoor Sport',  Math.min(sport,     2), sportHint())}
-            ${bioCard('😴', 'Schlaf',          Math.min(schlaf,    2), schlafHint())}
-            ${bioCard('🫀', 'Kreislauf',        Math.min(kreislauf, 2), kreislaufHint())}
-            ${bioCard('🧠', 'Kopf / Migräne',  Math.min(migraene,  2), migraeneHint())}
-            ${bioCard('🦴', 'Gelenke',          Math.min(gelenke,   2), gelenkeHint())}
-            ${bioCard('🫁', 'Atemwege',         Math.min(atemwege,  2), atemwegeHint())}
+            ${bioCard('🏃', 'Outdoor Sport',  Math.min(sport,     2), sportHint(),     'sport')}
+            ${bioCard('😴', 'Schlaf',          Math.min(schlaf,    2), schlafHint(),    'schlaf')}
+            ${bioCard('🫀', 'Kreislauf',        Math.min(kreislauf, 2), kreislaufHint(), 'kreislauf')}
+            ${bioCard('🧠', 'Kopf / Migräne',  Math.min(migraene,  2), migraeneHint(),  'migraene')}
+            ${bioCard('🦴', 'Gelenke',          Math.min(gelenke,   2), gelenkeHint(),   'gelenke')}
+            ${bioCard('🫁', 'Atemwege',         Math.min(atemwege,  2), atemwegeHint(),  'atemwege')}
             <p class="bio-disclaimer">Bio-Wetter basiert auf meteorologischen Schwellenwerten. Keine medizinische Aussage.</p>
         </div>
     `;
