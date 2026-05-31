@@ -959,20 +959,36 @@ function renderWarnings(data) {
 
     const alerts = data && data.alerts ? data.alerts : [];
 
-    // Nur aktive Warnungen (jetzt innerhalb onset–expires)
+    // Aktive + bevorstehende Warnungen (nächste 12h)
     const now = Date.now();
-    const active = alerts.filter(a => {
+    const in12h = now + 12 * 60 * 60 * 1000;
+    const relevant = alerts.filter(a => {
         const onset   = a.onset   ? new Date(a.onset).getTime()   : 0;
         const expires = a.expires ? new Date(a.expires).getTime() : Infinity;
-        return now >= onset && now <= expires;
-    });
+        return onset <= in12h && expires >= now;
+    }).sort((a, b) => new Date(a.onset) - new Date(b.onset));
 
-    if (!active.length) {
+    if (!relevant.length) {
         container.innerHTML = '';
         return;
     }
 
-    function sevColor(sev) {
+    function eventIcon(event) {
+        const e = (event || '').toLowerCase();
+        if (e.includes('flood') || e.includes('hochwasser')) return '🌊';
+        if (e.includes('thunder') || e.includes('gewitter'))  return '⛈️';
+        if (e.includes('snow') || e.includes('schnee'))       return '🌨️';
+        if (e.includes('wind') || e.includes('sturm'))        return '💨';
+        if (e.includes('fog') || e.includes('nebel'))         return '🌫️';
+        if (e.includes('frost') || e.includes('ice'))         return '🧊';
+        if (e.includes('heat') || e.includes('hitze'))        return '🌡️';
+        if (e.includes('rain') || e.includes('regen'))        return '🌧️';
+        return null;
+    }
+
+    function sevColor(sev, event) {
+        const isFlood = (event || '').toLowerCase().includes('flood') || (event || '').toLowerCase().includes('hochwasser');
+        if (isFlood) return { bg: '#eff6ff', border: '#3b82f6', text: '#1e40af', icon: '🌊' };
         switch ((sev || '').toLowerCase()) {
             case 'minor':    return { bg: '#fefce8', border: '#eab308', text: '#854d0e', icon: '⚠️' };
             case 'moderate': return { bg: '#fff7ed', border: '#f97316', text: '#9a3412', icon: '🟠' };
@@ -982,25 +998,31 @@ function renderWarnings(data) {
         }
     }
 
-    // Dark-Mode-Farben
     const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
 
-    container.innerHTML = active.map(a => {
-        const c = sevColor(a.severity);
-        const onset   = a.onset   ? new Date(a.onset).toLocaleString('de-DE',   {weekday:'short', day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'}) : '';
-        const expires = a.expires ? new Date(a.expires).toLocaleString('de-DE', {weekday:'short', day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'}) : '';
-        const bg     = isDark ? 'rgba(0,0,0,0.3)'   : c.bg;
+    container.innerHTML = relevant.map(a => {
+        const c      = sevColor(a.severity, a.event);
+        const icon   = eventIcon(a.event) || c.icon;
+        const onset  = a.onset   ? new Date(a.onset).getTime()   : 0;
+        const isActive = onset <= now;
+        const badge  = isActive
+            ? `<span class="warn-badge warn-active">Aktiv</span>`
+            : `<span class="warn-badge warn-soon">Bald</span>`;
+        const onsetStr   = a.onset   ? new Date(a.onset).toLocaleString('de-DE',   {weekday:'short', day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'}) : '';
+        const expiresStr = a.expires ? new Date(a.expires).toLocaleString('de-DE', {weekday:'short', day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'}) : '';
+        const bg     = isDark ? 'rgba(0,0,0,0.3)' : c.bg;
         const border = c.border;
         const text   = isDark ? '#e2e8f0' : c.text;
         return `<div class="warning-card" style="background:${bg};border-left:4px solid ${border};color:${text}">
             <div class="warning-header">
-                <span class="warning-icon">${c.icon}</span>
+                <span class="warning-icon">${icon}</span>
                 <span class="warning-title">${a.headline || a.event || 'Wetterwarnung'}</span>
+                ${badge}
             </div>
             ${a.description ? `<div class="warning-desc">${a.description.slice(0, 200)}${a.description.length > 200 ? '…' : ''}</div>` : ''}
             <div class="warning-time">
-                ${onset ? `Von: ${onset}` : ''}
-                ${expires ? ` &nbsp;|&nbsp; Bis: ${expires}` : ''}
+                ${onsetStr ? `Von: ${onsetStr}` : ''}
+                ${expiresStr ? ` &nbsp;|&nbsp; Bis: ${expiresStr}` : ''}
             </div>
         </div>`;
     }).join('');
