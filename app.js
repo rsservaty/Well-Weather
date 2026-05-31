@@ -621,6 +621,16 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
         document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
         btn.classList.add('active');
         document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+
+        // Mobile: Panel bei Inhalts-Tabs automatisch vergrößern
+        if (window.matchMedia('(max-width: 768px)').matches) {
+            if (!panelVisible) showPanel();
+            if (btn.dataset.tab === 'wetter') {
+                setMapHeight(55); // Standard
+            } else {
+                setMapHeight(20); // Großes Panel für Luft, Mond, UV
+            }
+        }
     });
 });
 
