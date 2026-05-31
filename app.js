@@ -13,6 +13,7 @@ const CONFIG = {
     minZoom:      3,
     maxZoom:      12,
     weatherUrl:   'https://api.open-meteo.com/v1/forecast',
+    airUrl:       'https://air-quality-api.open-meteo.com/v1/air-quality',
     geocodeUrl:   'https://nominatim.openstreetmap.org/search',
     searchDelay:  400,            // ms Debounce
 };
@@ -179,6 +180,9 @@ async function loadWeatherForCoords(lat, lon, cityName) {
             'temperature_2m_max',
             'temperature_2m_min',
             'precipitation_sum',
+            'sunrise',
+            'sunset',
+            'uv_index_max',
         ].join(','),
         hourly:      [
             'temperature_2m',
@@ -195,20 +199,31 @@ async function loadWeatherForCoords(lat, lon, cityName) {
             'wind_speed_10m',
             'visibility',
             'weather_code',
+            'uv_index',
         ].join(','),
         wind_speed_unit:    'kmh',
         timezone:           'auto',
         forecast_days:      7,
     });
 
-    try {
-        const resp = await fetch(`${CONFIG.weatherUrl}?${params}`);
-        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-        const data = await resp.json();
+    // Wetter + Luftqualität parallel laden
+    const [weatherResult, airResult] = await Promise.allSettled([
+        fetch(`${CONFIG.weatherUrl}?${params}`)
+            .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); }),
+        fetchAirQuality(lat, lon),
+    ]);
+
+    if (weatherResult.status === 'fulfilled') {
+        const data = weatherResult.value;
         renderWeather(data, displayName, lat, lon);
-    } catch (err) {
-        console.error('Wetterfehler:', err);
+        renderUV(data);
+    } else {
+        console.error('Wetterfehler:', weatherResult.reason);
         showError('Wetterdaten konnten nicht geladen werden. Bitte prüfe deine Internetverbindung.');
+    }
+
+    if (airResult.status === 'fulfilled' && airResult.value) {
+        renderAir(airResult.value);
     }
 }
 
@@ -531,5 +546,300 @@ mapToggleBtn.addEventListener('click', togglePanel);
 
 // ---- App starten ----
 initMap();
+renderMoon(); // Mond braucht keinen Standort
 // Standort beim Laden automatisch ermitteln (Browser fragt nach Erlaubnis)
 tryGeolocation();
+
+
+// =====================================================
+// TAB-SWITCHING
+// =====================================================
+document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+    });
+});
+
+// =====================================================
+// LUFTQUALITÄT (Open-Meteo Air Quality API)
+// =====================================================
+async function fetchAirQuality(lat, lon) {
+    try {
+        const p = new URLSearchParams({
+            latitude:  lat.toFixed(4),
+            longitude: lon.toFixed(4),
+            current:   'european_aqi,pm10,pm2_5,ozone,nitrogen_dioxide',
+            hourly:    'alder_pollen,birch_pollen,grass_pollen,mugwort_pollen,ragweed_pollen',
+            timezone:  'auto',
+            forecast_days: '1',
+        });
+        const r = await fetch(`${CONFIG.airUrl}?${p}`);
+        if (!r.ok) return null;
+        return r.json();
+    } catch { return null; }
+}
+
+function renderAir(data) {
+    const cur = data.current || {};
+    const aqi = cur.european_aqi != null ? cur.european_aqi : null;
+
+    function aqiInfo(v) {
+        if (v == null) return { label: 'Keine Daten', color: 'var(--text-muted)' };
+        if (v <= 20)  return { label: 'Sehr gut',        color: '#22c55e' };
+        if (v <= 40)  return { label: 'Gut',             color: '#86efac' };
+        if (v <= 60)  return { label: 'Mäßig',           color: '#eab308' };
+        if (v <= 80)  return { label: 'Schlecht',        color: '#f97316' };
+        if (v <= 100) return { label: 'Sehr schlecht',   color: '#ef4444' };
+        return { label: 'Extrem schlecht', color: '#a855f7' };
+    }
+    const info = aqiInfo(aqi);
+    const pct  = aqi != null ? Math.min(aqi, 100) : 0;
+
+    // Pollen: aktuelle Stunde ermitteln
+    const hourly = data.hourly || {};
+    const now = new Date();
+    const pad = n => String(n).padStart(2, '0');
+    const nowH = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}T${pad(now.getHours())}`;
+    const times = hourly.time || [];
+    let hIdx = times.findIndex(t => t.startsWith(nowH));
+    if (hIdx < 0) hIdx = 0;
+
+    const pollenTypes = [
+        { key: 'alder_pollen',   name: 'Erle'     },
+        { key: 'birch_pollen',   name: 'Birke'    },
+        { key: 'grass_pollen',   name: 'Gräser'   },
+        { key: 'mugwort_pollen', name: 'Beifuß'   },
+        { key: 'ragweed_pollen', name: 'Ambrosia' },
+    ];
+
+    function pollenLevel(v) {
+        if (!v || v === 0) return { label: 'Keine',      color: '#22c55e', pct: 0   };
+        if (v <= 10)       return { label: 'Gering',     color: '#86efac', pct: 10  };
+        if (v <= 30)       return { label: 'Mäßig',      color: '#eab308', pct: 35  };
+        if (v <= 100)      return { label: 'Hoch',       color: '#f97316', pct: 70  };
+        return               { label: 'Sehr hoch',   color: '#ef4444', pct: 100 };
+    }
+
+    const pollenHtml = pollenTypes.map(p => {
+        const val = (hourly[p.key] || [])[hIdx] || 0;
+        const lvl = pollenLevel(val);
+        return `<div class="pollen-item">
+            <span class="pollen-name">${p.name}</span>
+            <div class="pollen-bar-wrap"><div class="pollen-bar-fill" style="width:${lvl.pct}%;background:${lvl.color}"></div></div>
+            <span class="pollen-level-label">${lvl.label}</span>
+        </div>`;
+    }).join('');
+
+    document.getElementById('luftContent').innerHTML = `
+        <div class="luft-wrapper">
+            <div class="aqi-card">
+                <div class="aqi-header">
+                    <div>
+                        <div class="aqi-subtitle">Europäischer Luftqualitätsindex</div>
+                        <div class="aqi-label-text" style="color:${info.color}">${info.label}</div>
+                    </div>
+                    <div class="aqi-value-big" style="color:${info.color}">${aqi != null ? aqi : '—'}</div>
+                </div>
+                <div class="aqi-bar"><div class="aqi-pointer" style="left:${pct}%"></div></div>
+                <div class="aqi-scale-labels"><span>0 Sehr gut</span><span>100 Extrem</span></div>
+                <div class="pollutant-grid">
+                    <div class="pollutant-item"><div class="pollutant-name">PM2.5</div><div class="pollutant-value">${cur.pm2_5 != null ? cur.pm2_5.toFixed(1) : '—'} µg/m³</div></div>
+                    <div class="pollutant-item"><div class="pollutant-name">PM10</div><div class="pollutant-value">${cur.pm10 != null ? cur.pm10.toFixed(1) : '—'} µg/m³</div></div>
+                    <div class="pollutant-item"><div class="pollutant-name">Ozon O₃</div><div class="pollutant-value">${cur.ozone != null ? cur.ozone.toFixed(0) : '—'} µg/m³</div></div>
+                    <div class="pollutant-item"><div class="pollutant-name">NO₂</div><div class="pollutant-value">${cur.nitrogen_dioxide != null ? cur.nitrogen_dioxide.toFixed(1) : '—'} µg/m³</div></div>
+                </div>
+            </div>
+            <div class="section-divider"><span>Pollenflug heute</span></div>
+            <div class="pollen-card">
+                <div class="pollen-card-title">Pollenbelastung aktuell</div>
+                ${pollenHtml}
+            </div>
+        </div>
+    `;
+    document.getElementById('luftWelcome').classList.add('hidden');
+    document.getElementById('luftContent').classList.remove('hidden');
+}
+
+// =====================================================
+// MONDKALENDER (reine JS-Berechnung, keine API nötig)
+// =====================================================
+function moonPhaseData(date) {
+    const ref     = new Date('2000-01-06T18:14:00Z');
+    const syn     = 29.53058867;
+    const diff    = (date - ref) / 86400000;
+    const age     = ((diff % syn) + syn) % syn;
+    const illum   = Math.round((1 - Math.cos(age / syn * 2 * Math.PI)) / 2 * 100);
+    let emoji, name;
+    if      (age < 1.85)  { emoji = '🌑'; name = 'Neumond'; }
+    else if (age < 7.38)  { emoji = '🌒'; name = 'Zunehmende Sichel'; }
+    else if (age < 9.22)  { emoji = '🌓'; name = 'Erstes Viertel'; }
+    else if (age < 14.77) { emoji = '🌔'; name = 'Zunehmender Mond'; }
+    else if (age < 16.61) { emoji = '🌕'; name = 'Vollmond'; }
+    else if (age < 22.15) { emoji = '🌖'; name = 'Abnehmender Mond'; }
+    else if (age < 23.99) { emoji = '🌗'; name = 'Letztes Viertel'; }
+    else                  { emoji = '🌘'; name = 'Abnehmende Sichel'; }
+    const dToFull = age < 14.77 ? Math.round(14.77 - age) : Math.round(syn - age + 14.77);
+    const dToNew  = age < 0.5   ? 0 : Math.round(syn - age);
+    return { age, illum, emoji, name, dToFull, dToNew };
+}
+
+function moonEmoji(age) {
+    if (age < 1.85)  return '🌑';
+    if (age < 7.38)  return '🌒';
+    if (age < 9.22)  return '🌓';
+    if (age < 14.77) return '🌔';
+    if (age < 16.61) return '🌕';
+    if (age < 22.15) return '🌖';
+    if (age < 23.99) return '🌗';
+    return '🌘';
+}
+
+const MONTHS_DE = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+
+function renderMoon() {
+    const today = new Date();
+    const m     = moonPhaseData(today);
+    const year  = today.getFullYear();
+    const month = today.getMonth();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const firstWd     = new Date(year, month, 1).getDay();
+    const offset      = (firstWd + 6) % 7; // Woche startet Montag
+
+    let calHtml = '<div class="moon-cal-grid">';
+    ['Mo','Di','Mi','Do','Fr','Sa','So'].forEach(d => {
+        calHtml += `<div class="moon-cal-wd">${d}</div>`;
+    });
+    for (let i = 0; i < offset; i++) calHtml += '<div></div>';
+    for (let d = 1; d <= daysInMonth; d++) {
+        const md   = moonPhaseData(new Date(year, month, d, 12));
+        const isT  = d === today.getDate();
+        calHtml += `<div class="moon-cal-day${isT ? ' today' : ''}">
+            <div class="moon-cal-num">${d}</div>
+            <div class="moon-cal-icon">${moonEmoji(md.age)}</div>
+        </div>`;
+    }
+    calHtml += '</div>';
+
+    document.getElementById('mondContent').innerHTML = `
+        <div class="mond-wrapper">
+            <div class="moon-card">
+                <span class="moon-emoji-big">${m.emoji}</span>
+                <div class="moon-phase-name">${m.name}</div>
+                <div class="moon-illumination">Beleuchtung: ${m.illum}%</div>
+                <div class="moon-next-grid">
+                    <div class="moon-next-item">
+                        <div class="moon-next-label">🌕 Nächster Vollmond</div>
+                        <div class="moon-next-value">in ${m.dToFull} Tagen</div>
+                    </div>
+                    <div class="moon-next-item">
+                        <div class="moon-next-label">🌑 Nächster Neumond</div>
+                        <div class="moon-next-value">in ${m.dToNew} Tagen</div>
+                    </div>
+                </div>
+            </div>
+            <div class="section-divider"><span>Mondkalender ${MONTHS_DE[month]} ${year}</span></div>
+            <div class="moon-calendar-card">
+                <div class="moon-cal-title"></div>
+                ${calHtml}
+            </div>
+        </div>
+    `;
+}
+
+// =====================================================
+// UV-INDEX & SONNE
+// =====================================================
+function renderUV(data) {
+    const cur    = data.current || {};
+    const daily  = data.daily   || {};
+    const uv     = cur.uv_index != null ? cur.uv_index : null;
+    const uvMax  = (daily.uv_index_max || [])[0];
+    const sunrise = (daily.sunrise || [])[0];
+    const sunset  = (daily.sunset  || [])[0];
+
+    function uvInfo(v) {
+        if (v == null) return { label: '—',          color: 'var(--text-muted)', adv: '' };
+        if (v <= 2)    return { label: 'Niedrig',    color: '#22c55e', adv: 'Kein Schutz nötig' };
+        if (v <= 5)    return { label: 'Mäßig',      color: '#eab308', adv: 'Sonnenschutz empfohlen' };
+        if (v <= 7)    return { label: 'Hoch',       color: '#f97316', adv: 'Sonnenschutz notwendig' };
+        if (v <= 10)   return { label: 'Sehr hoch',  color: '#ef4444', adv: 'Unbedingt Sonnenschutz!' };
+        return           { label: 'Extrem',       color: '#a855f7', adv: 'Direkte Sonne meiden!' };
+    }
+    const info = uvInfo(uv);
+
+    let arcHtml   = '<p style="color:var(--text-muted);text-align:center;padding:1rem">Standortdaten werden geladen...</p>';
+    let statsHtml = '';
+
+    if (sunrise && sunset) {
+        const sr  = new Date(sunrise);
+        const ss  = new Date(sunset);
+        const now = new Date();
+        const srM = sr.getHours() * 60 + sr.getMinutes();
+        const ssM = ss.getHours() * 60 + ss.getMinutes();
+        const nowM = now.getHours() * 60 + now.getMinutes();
+        const total   = ssM - srM;
+        const elapsed = Math.max(0, Math.min(1, (nowM - srM) / total));
+        const isDaytime = nowM >= srM && nowM <= ssM;
+
+        const cx = 150, cy = 100, r = 78;
+        const sunAngle = Math.PI - elapsed * Math.PI;
+        const sunX = cx + r * Math.cos(sunAngle);
+        const sunY = cy - r * Math.sin(sunAngle);
+
+        // SVG-Bogen
+        const arcColor = getComputedStyle(document.documentElement).getPropertyValue('--border').trim() || 'rgba(148,163,184,0.2)';
+        arcHtml = `<svg class="sun-arc-svg" viewBox="0 0 300 110">
+            <path d="M ${cx-r} ${cy} A ${r} ${r} 0 0 1 ${cx+r} ${cy}" fill="none" stroke="rgba(148,163,184,0.25)" stroke-width="3"/>
+            <path d="M ${cx-r} ${cy} A ${r} ${r} 0 0 1 ${sunX.toFixed(1)} ${sunY.toFixed(1)}" fill="none" stroke="#eab308" stroke-width="3" stroke-linecap="round"/>
+            <line x1="${cx-r-6}" y1="${cy}" x2="${cx+r+6}" y2="${cy}" stroke="rgba(148,163,184,0.2)" stroke-width="1"/>
+            ${isDaytime
+                ? `<circle cx="${sunX.toFixed(1)}" cy="${sunY.toFixed(1)}" r="10" fill="#eab308" opacity="0.95"/>
+                   <circle cx="${sunX.toFixed(1)}" cy="${sunY.toFixed(1)}" r="18" fill="#eab308" opacity="0.12"/>`
+                : `<circle cx="${sunX.toFixed(1)}" cy="${sunY.toFixed(1)}" r="8" fill="none" stroke="#eab308" stroke-width="2" opacity="0.5"/>`
+            }
+            <text x="${cx-r}" y="${cy+16}" text-anchor="middle" fill="var(--text-muted)" font-size="10" font-family="sans-serif">${sr.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})}</text>
+            <text x="${cx+r}" y="${cy+16}" text-anchor="middle" fill="var(--text-muted)" font-size="10" font-family="sans-serif">${ss.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})}</text>
+        </svg>`;
+
+        const dayH = Math.floor(total / 60);
+        const dayM = total % 60;
+        statsHtml = `<div class="sun-stats-grid">
+            <div class="sun-stat"><div class="sun-stat-label">🌅 Sonnenaufgang</div><div class="sun-stat-value">${sr.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})} Uhr</div></div>
+            <div class="sun-stat"><div class="sun-stat-label">🌇 Sonnenuntergang</div><div class="sun-stat-value">${ss.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})} Uhr</div></div>
+            <div class="sun-stat"><div class="sun-stat-label">⏱️ Tageslänge</div><div class="sun-stat-value">${dayH}h ${dayM}min</div></div>
+            <div class="sun-stat"><div class="sun-stat-label">☀️ UV max. heute</div><div class="sun-stat-value">${uvMax != null ? uvMax.toFixed(1) : '—'}</div></div>
+        </div>`;
+    }
+
+    document.getElementById('uvContent').innerHTML = `
+        <div class="uv-wrapper">
+            <div class="uv-card">
+                <div class="uv-value-row">
+                    <div class="uv-number" style="color:${info.color}">${uv != null ? uv.toFixed(1) : '—'}</div>
+                    <div>
+                        <div class="uv-category" style="color:${info.color}">${info.label}</div>
+                        <div class="uv-advice">${info.adv}</div>
+                    </div>
+                </div>
+                <div class="uv-scale">
+                    <div class="uv-scale-seg" style="background:#22c55e"></div>
+                    <div class="uv-scale-seg" style="background:#eab308"></div>
+                    <div class="uv-scale-seg" style="background:#f97316"></div>
+                    <div class="uv-scale-seg" style="background:#ef4444"></div>
+                    <div class="uv-scale-seg" style="background:#a855f7"></div>
+                </div>
+                <div class="uv-scale-labels"><span>0-2 Niedrig</span><span>3-5 Mäßig</span><span>6-7 Hoch</span><span>8-10 Sehr hoch</span><span>11+ Extrem</span></div>
+            </div>
+            <div class="section-divider"><span>Sonnenverlauf</span></div>
+            <div class="sun-card">
+                ${arcHtml}
+                ${statsHtml}
+            </div>
+        </div>
+    `;
+    document.getElementById('uvWelcome').classList.add('hidden');
+    document.getElementById('uvContent').classList.remove('hidden');
+}
