@@ -896,8 +896,8 @@ function renderUV(data) {
             }
             <text x="${cx-r}" y="${cy+16}" text-anchor="middle" fill="var(--text-muted)" font-size="10" font-family="sans-serif">${srTime}</text>
             <text x="${cx+r}" y="${cy+16}" text-anchor="middle" fill="var(--text-muted)" font-size="10" font-family="sans-serif">${ssTime}</text>
-            <text x="${cx}" y="${cy+28}" text-anchor="middle" fill="var(--text-muted)" font-size="11" font-family="sans-serif">🕐 Ortszeit: ${locTimeStr} Uhr</text>
-        </svg>`;
+        </svg>
+        <p style="text-align:center;font-size:0.82rem;color:var(--text-muted);margin:4px 0 0">🕐 Ortszeit: ${locTimeStr} Uhr</p>`;
 
         const dayH = Math.floor(total / 60);
         const dayM = total % 60;
