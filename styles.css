@@ -1369,3 +1369,15 @@ body.panel-hidden .map-wrapper {
     margin-top: 8px;
     opacity: 0.7;
 }
+
+/* ---- Warn-Badges ---- */
+.warn-badge {
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 10px;
+    margin-left: auto;
+    white-space: nowrap;
+}
+.warn-active { background: #ef4444; color: #fff; }
+.warn-soon   { background: #f97316; color: #fff; }
