@@ -631,14 +631,9 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.classList.add('active');
         document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
 
-        // Mobile: Panel bei Inhalts-Tabs automatisch vergrößern
+        // Mobile: Panel anzeigen falls versteckt, aber Größe beibehalten
         if (window.matchMedia('(max-width: 768px)').matches) {
             if (!panelVisible) showPanel();
-            if (btn.dataset.tab === 'wetter') {
-                setMapHeight(55); // Standard
-            } else {
-                setMapHeight(20); // Großes Panel für Luft, Mond, UV
-            }
         }
     });
 });
