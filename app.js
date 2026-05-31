@@ -201,6 +201,7 @@ async function loadWeatherForCoords(lat, lon, cityName) {
             'visibility',
             'weather_code',
             'uv_index',
+            'pressure_msl',
         ].join(','),
         wind_speed_unit:    'kmh',
         timezone:           'auto',
@@ -224,8 +225,12 @@ async function loadWeatherForCoords(lat, lon, cityName) {
         showError('Wetterdaten konnten nicht geladen werden. Bitte prüfe deine Internetverbindung.');
     }
 
+    const pressure = weatherResult.status === 'fulfilled'
+        ? (weatherResult.value?.current?.pressure_msl ?? null)
+        : null;
+
     if (airResult.status === 'fulfilled' && airResult.value) {
-        renderAir(airResult.value);
+        renderAir(airResult.value, pressure);
     }
 
     renderWarnings(warnResult.status === 'fulfilled' ? warnResult.value : null);
@@ -653,7 +658,7 @@ async function fetchAirQuality(lat, lon) {
     } catch { return null; }
 }
 
-function renderAir(data) {
+function renderAir(data, pressure) {
     const cur = data.current || {};
     const aqi = cur.european_aqi != null ? cur.european_aqi : null;
 
@@ -722,6 +727,13 @@ function renderAir(data) {
                     <div class="pollutant-item"><div class="pollutant-name">Ozon O₃</div><div class="pollutant-value">${cur.ozone != null ? cur.ozone.toFixed(0) : '—'} µg/m³</div></div>
                     <div class="pollutant-item"><div class="pollutant-name">NO₂</div><div class="pollutant-value">${cur.nitrogen_dioxide != null ? cur.nitrogen_dioxide.toFixed(1) : '—'} µg/m³</div></div>
                 </div>
+            </div>
+            <div class="pressure-card">
+                <div class="pressure-header">
+                    <span class="pressure-label">🌡️ Luftdruck</span>
+                    <span class="pressure-value">${pressure != null ? pressure.toFixed(0) + ' hPa' : '—'}</span>
+                </div>
+                <div class="pressure-desc">${pressure != null ? (pressure < 1000 ? 'Tief — wechselhaftes Wetter' : pressure < 1013 ? 'Wechselhaft' : 'Hoch — stabiles Wetter') : ''}</div>
             </div>
             <div class="section-divider"><span>Pollenflug heute</span></div>
             <div class="pollen-card">
