@@ -774,7 +774,7 @@ function moonPhaseData(date) {
     else if (age < 22.15) { emoji = '🌖'; name = 'Abnehmender Mond'; }
     else if (age < 23.99) { emoji = '🌗'; name = 'Letztes Viertel'; }
     else                  { emoji = '🌘'; name = 'Abnehmende Sichel'; }
-    const dToFull = age < 14.77 ? Math.round(14.77 - age) : Math.round(syn - age + 14.77);
+    const dToFull = age < 14.77 ? Math.round(14.77 - age) : (age < 16.61 ? 0 : Math.round(syn - age + 14.77));
     const dToNew  = age < 0.5   ? 0 : Math.round(syn - age);
     return { age, illum, emoji, name, dToFull, dToNew };
 }
@@ -807,8 +807,8 @@ function renderMoon() {
     });
     for (let i = 0; i < offset; i++) calHtml += '<div></div>';
     for (let d = 1; d <= daysInMonth; d++) {
-        const md   = moonPhaseData(new Date(year, month, d, 12));
         const isT  = d === today.getDate();
+        const md   = isT ? m : moonPhaseData(new Date(year, month, d, 12));
         calHtml += `<div class="moon-cal-day${isT ? ' today' : ''}">
             <div class="moon-cal-num">${d}</div>
             <div class="moon-cal-icon">${moonEmoji(md.age)}</div>
