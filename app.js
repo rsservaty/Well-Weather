@@ -1209,12 +1209,7 @@ function renderBio(data, airData) {
     function bioCard(icon, title, score, hint, cat) {
         const a = ampel(score);
         const detailId = 'bio-detail-' + cat;
-        return `<div class="bio-card" style="border-left:3px solid ${a.color};background:${a.bg}" onclick="
-            const d=document.getElementById('${detailId}');
-            const arr=this.querySelector('.bio-arrow');
-            if(d.style.display==='none'||!d.style.display){d.style.display='block';arr.textContent='▲';}
-            else{d.style.display='none';arr.textContent='▼';}
-        ">
+        return `<div class="bio-card bio-card-toggle" data-detail="${detailId}" style="border-left:3px solid ${a.color};background:${a.bg};cursor:pointer">
             <div class="bio-card-header">
                 <span class="bio-icon">${icon}</span>
                 <span class="bio-title">${title}</span>
@@ -1299,6 +1294,18 @@ function renderBio(data, airData) {
     `;
     document.getElementById('bioWelcome').classList.add('hidden');
     document.getElementById('bioContent').classList.remove('hidden');
+
+    // Klick-Handler für alle Bio-Karten
+    document.querySelectorAll('.bio-card-toggle').forEach(card => {
+        card.addEventListener('click', () => {
+            const detail = document.getElementById(card.dataset.detail);
+            const arrow  = card.querySelector('.bio-arrow');
+            if (!detail) return;
+            const isOpen = detail.style.display === 'block';
+            detail.style.display = isOpen ? 'none' : 'block';
+            arrow.textContent = isOpen ? '▼' : '▲';
+        });
+    });
 }
 
 // =====================================================
