@@ -1061,6 +1061,9 @@ function renderBio(data, airData) {
     const hasThunder = wcode >= 95;
     const isFoehn    = tChange > 5 && humidity != null && humidity < 40 && wind > 20;
 
+    // Niederschlag aktuelle Stunde
+    const precip = (hourly.precipitation || [])[hIdx] ?? 0;
+
     // ---- SCORING ----
     // Kreislauf
     let kreislauf = 0;
@@ -1094,6 +1097,17 @@ function renderBio(data, airData) {
     else if (tSwing > 8)        schlaf += 1;
     if (pressureDiff < -3)      schlaf += 1;
     if (humidity != null && humidity > 80) schlaf += 1;
+
+    // Outdoor Sport
+    let sport = 0;
+    if (hasThunder)                                          sport += 2;
+    if (temp != null && (temp < 2 || temp > 35))            sport += 2;
+    else if (temp != null && (temp < 8 || temp > 30))       sport += 1;
+    if (wind > 50)                                           sport += 2;
+    else if (wind > 30)                                      sport += 1;
+    if (precip > 0.5)                                        sport += 1;
+    if (humidity != null && humidity > 85)                   sport += 1;
+    if (cur.uv_index != null && cur.uv_index > 8)           sport += 1;
 
     // ---- AMPEL ----
     function ampel(score) {
@@ -1149,6 +1163,19 @@ function renderBio(data, airData) {
         return 'Gute Schlafbedingungen erwartet.';
     }
 
+    function sportHint() {
+        if (hasThunder) return 'Gewitter — Outdoor Sport nicht empfohlen!';
+        if (temp != null && temp > 35) return 'Zu heiß — Überhitzungsgefahr beim Sport.';
+        if (temp != null && temp < 2) return 'Zu kalt — Verletzungsgefahr durch gefrorenen Boden.';
+        if (wind > 50) return 'Sehr starker Wind — draußen Sport gefährlich.';
+        if (precip > 0.5) return 'Niederschlag — Sport nur mit entsprechender Ausrüstung.';
+        if (humidity != null && humidity > 85) return 'Sehr schwül — körperliche Belastung erhöht.';
+        if (cur.uv_index != null && cur.uv_index > 8) return 'Sehr hoher UV-Index — nur mit Sonnenschutz und in kühlen Stunden.';
+        if (wind > 30) return 'Kräftiger Wind — leicht eingeschränkt, aber möglich.';
+        if (temp != null && (temp < 8 || temp > 30)) return 'Temperatur am Grenzbereich — angepasste Kleidung empfohlen.';
+        return 'Gute Bedingungen für Outdoor Sport!';
+    }
+
     const pressureTrendText = pressureDiff > 0
         ? `+${pressureDiff.toFixed(1)} hPa` 
         : `${pressureDiff.toFixed(1)} hPa`;
@@ -1165,6 +1192,7 @@ function renderBio(data, airData) {
             ${bioCard('🦴', 'Gelenke',      Math.min(gelenke,   2), gelenkeHint())}
             ${bioCard('🫁', 'Atemwege',     Math.min(atemwege,  2), atemwegeHint())}
             ${bioCard('😴', 'Schlaf',       Math.min(schlaf,    2), schlafHint())}
+            ${bioCard('🏃', 'Outdoor Sport', Math.min(sport,     2), sportHint())}
             <p class="bio-disclaimer">Bio-Wetter basiert auf meteorologischen Schwellenwerten. Keine medizinische Aussage.</p>
         </div>
     `;
