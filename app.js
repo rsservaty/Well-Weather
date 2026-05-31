@@ -1339,10 +1339,9 @@ if (appTitle) {
 }
 
 // Impressum Modal
-const impressumLink  = document.getElementById('impressumLink');
 const impressumModal = document.getElementById('impressumModal');
 const impressumClose = document.getElementById('impressumClose');
-if (impressumLink) impressumLink.addEventListener('click', e => { e.preventDefault(); impressumModal.style.display = 'block'; });
+window.openImpressum = () => { impressumModal.style.display = 'block'; };
 if (impressumClose) impressumClose.addEventListener('click', () => { impressumModal.style.display = 'none'; });
 if (impressumModal) impressumModal.addEventListener('click', e => { if (e.target === impressumModal) impressumModal.style.display = 'none'; });
 
