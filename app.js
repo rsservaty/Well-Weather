@@ -192,6 +192,7 @@ async function loadWeatherForCoords(lat, lon, cityName) {
             'wind_speed_10m',
             'visibility',
             'weather_code',
+            'pressure_msl',
         ].join(','),
         current:     [
             'temperature_2m',
@@ -202,10 +203,12 @@ async function loadWeatherForCoords(lat, lon, cityName) {
             'weather_code',
             'uv_index',
             'pressure_msl',
+            'relative_humidity_2m',
         ].join(','),
         wind_speed_unit:    'kmh',
         timezone:           'auto',
         forecast_days:      7,
+        past_days:          1,
     });
 
     // Wetter + Luftqualität + Warnungen parallel laden
@@ -220,6 +223,7 @@ async function loadWeatherForCoords(lat, lon, cityName) {
         const data = weatherResult.value;
         renderWeather(data, displayName, lat, lon);
         renderUV(data);
+        renderBio(data, airResult.status === 'fulfilled' ? airResult.value : null);
     } else {
         console.error('Wetterfehler:', weatherResult.reason);
         showError('Wetterdaten konnten nicht geladen werden. Bitte prüfe deine Internetverbindung.');
@@ -1001,6 +1005,172 @@ function renderWarnings(data) {
             </div>
         </div>`;
     }).join('');
+}
+
+
+// =====================================================
+// BIO-WETTER
+// =====================================================
+function renderBio(data, airData) {
+    const cur    = data.current  || {};
+    const daily  = data.daily    || {};
+    const hourly = data.hourly   || {};
+
+    const temp     = cur.temperature_2m     ?? null;
+    const humidity = cur.relative_humidity_2m ?? null;
+    const wind     = cur.wind_speed_10m     ?? 0;
+    const wcode    = cur.weather_code       ?? 0;
+
+    // Aktuelle Stunde im Stunden-Array finden (inkl. past_days=1)
+    const pad = n => String(n).padStart(2, '0');
+    const now = new Date();
+    const nowHour = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}T${pad(now.getHours())}`;
+    const times = hourly.time || [];
+    let hIdx = times.findIndex(t => t.startsWith(nowHour));
+    if (hIdx < 0) hIdx = 24;
+
+    // Luftdruck-Trend (Differenz jetzt vs. vor 24h)
+    const pArr   = hourly.pressure_msl || [];
+    const pNow   = pArr[hIdx]                        ?? null;
+    const p24ago = pArr[Math.max(0, hIdx - 24)]      ?? null;
+    const pressureDiff = (pNow != null && p24ago != null) ? (pNow - p24ago) : 0;
+
+    // Temperatur-Schwankung heute (Max - Min)
+    const tMax   = (daily.temperature_2m_max || [])[1] ?? null; // [1] = heute (past_days verschiebt)
+    const tMin   = (daily.temperature_2m_min || [])[1] ?? null;
+    const tSwing = (tMax != null && tMin != null) ? (tMax - tMin) : 0;
+
+    // Temperaturwechsel zu morgen
+    const tTomMax = (daily.temperature_2m_max || [])[2] ?? null;
+    const tChange = (tMax != null && tTomMax != null) ? (tTomMax - tMax) : 0;
+
+    // Pollen (Maximum aller Arten)
+    const airH   = airData ? (airData.hourly || {}) : {};
+    const airTimes = airH.time || [];
+    let aIdx = airTimes.findIndex(t => t.startsWith(nowHour));
+    if (aIdx < 0) aIdx = 0;
+    const maxPollen = Math.max(
+        (airH.alder_pollen   || [])[aIdx] || 0,
+        (airH.birch_pollen   || [])[aIdx] || 0,
+        (airH.grass_pollen   || [])[aIdx] || 0,
+        (airH.mugwort_pollen || [])[aIdx] || 0,
+        (airH.ragweed_pollen || [])[aIdx] || 0,
+    );
+    const ozone = airData ? ((airData.current || {}).ozone ?? 0) : 0;
+
+    // Sonderbedingungen
+    const hasThunder = wcode >= 95;
+    const isFoehn    = tChange > 5 && humidity != null && humidity < 40 && wind > 20;
+
+    // ---- SCORING ----
+    // Kreislauf
+    let kreislauf = 0;
+    if (pressureDiff < -8)      kreislauf += 2;
+    else if (pressureDiff < -3) kreislauf += 1;
+    if (Math.abs(tChange) > 8)  kreislauf += 1;
+
+    // Migräne / Kopf
+    let migraene = 0;
+    if (pressureDiff < -5)      migraene += 2;
+    else if (pressureDiff < -2) migraene += 1;
+    if (isFoehn)                migraene += 2;
+    if (hasThunder)             migraene += 1;
+
+    // Gelenke / Rheuma
+    let gelenke = 0;
+    if (temp != null && temp < 10 && pressureDiff < -3) gelenke += 2;
+    else if (pressureDiff < -3)                         gelenke += 1;
+    if (humidity != null && humidity > 80 && temp != null && temp < 12) gelenke += 1;
+
+    // Atemwege
+    let atemwege = 0;
+    if (maxPollen > 30)                                 atemwege += 2;
+    else if (maxPollen > 10)                            atemwege += 1;
+    if (ozone > 120)                                    atemwege += 1;
+    if (humidity != null && humidity < 30)              atemwege += 1;
+
+    // Schlaf
+    let schlaf = 0;
+    if (tSwing > 12)            schlaf += 2;
+    else if (tSwing > 8)        schlaf += 1;
+    if (pressureDiff < -3)      schlaf += 1;
+    if (humidity != null && humidity > 80) schlaf += 1;
+
+    // ---- AMPEL ----
+    function ampel(score) {
+        if (score <= 0) return { label: 'Gering',  color: '#22c55e', bg: 'rgba(34,197,94,0.1)',  dot: '🟢' };
+        if (score === 1) return { label: 'Erhöht', color: '#eab308', bg: 'rgba(234,179,8,0.1)',   dot: '🟡' };
+        return              { label: 'Hoch',   color: '#ef4444', bg: 'rgba(239,68,68,0.1)',   dot: '🔴' };
+    }
+
+    function bioCard(icon, title, score, hint) {
+        const a = ampel(score);
+        return `<div class="bio-card" style="border-left:3px solid ${a.color};background:${a.bg}">
+            <div class="bio-card-header">
+                <span class="bio-icon">${icon}</span>
+                <span class="bio-title">${title}</span>
+                <span class="bio-level" style="color:${a.color}">${a.dot} ${a.label}</span>
+            </div>
+            <div class="bio-hint">${hint}</div>
+        </div>`;
+    }
+
+    // Hinweis-Texte
+    function kreislaufHint() {
+        if (pressureDiff < -8) return 'Starker Druckabfall — Kreislauf kann belastet sein.';
+        if (pressureDiff < -3) return 'Leichter Druckabfall spürbar.';
+        if (Math.abs(tChange) > 8) return 'Großer Temperatursprung morgen.';
+        return 'Stabile Bedingungen, kaum Kreislaufbelastung.';
+    }
+    function migraeneHint() {
+        if (isFoehn) return 'Föhn-ähnliche Lage — typischer Migräne-Auslöser.';
+        if (pressureDiff < -5) return 'Deutlicher Druckabfall — Risiko für Kopfschmerzen erhöht.';
+        if (hasThunder) return 'Gewitter in der Nähe — elektrische Felder können Beschwerden auslösen.';
+        if (pressureDiff < -2) return 'Leichter Druckabfall, bei Empfindlichkeit möglich.';
+        return 'Keine typischen Migräne-Auslöser aktiv.';
+    }
+    function gelenkeHint() {
+        if (temp != null && temp < 10 && pressureDiff < -3) return 'Kalt und fallender Druck — ungünstig für Gelenke und Rheuma.';
+        if (humidity != null && humidity > 80) return 'Hohe Luftfeuchtigkeit kann Gelenke belasten.';
+        if (pressureDiff < -3) return 'Druckabfall kann Gelenkschmerzen begünstigen.';
+        return 'Keine besonderen Gelenkbelastungen.';
+    }
+    function atemwegeHint() {
+        if (maxPollen > 30) return 'Hohe Pollenbelastung — Allergiker sollten vorsichtig sein.';
+        if (ozone > 120) return 'Erhöhte Ozonwerte — Aufenthalt im Freien reduzieren.';
+        if (humidity != null && humidity < 30) return 'Sehr trockene Luft — Atemwege können gereizt werden.';
+        if (maxPollen > 10) return 'Mäßige Pollenbelastung vorhanden.';
+        return 'Luft für Atemwege weitgehend unbelastet.';
+    }
+    function schlafHint() {
+        if (tSwing > 12) return 'Große Temperaturschwankung heute — Schlaf kann unruhig sein.';
+        if (tSwing > 8) return 'Spürbare Temperaturdifferenz zwischen Tag und Nacht.';
+        if (humidity != null && humidity > 80) return 'Schwüle Luft kann den Schlaf beeinträchtigen.';
+        if (pressureDiff < -3) return 'Wetterwechsel — kann den Schlaf leicht stören.';
+        return 'Gute Schlafbedingungen erwartet.';
+    }
+
+    const pressureTrendText = pressureDiff > 0
+        ? `+${pressureDiff.toFixed(1)} hPa` 
+        : `${pressureDiff.toFixed(1)} hPa`;
+
+    document.getElementById('bioContent').innerHTML = `
+        <div class="bio-wrapper">
+            <div class="bio-meta">
+                <span>Luftdruck-Trend (24h): <strong>${pressureTrendText}</strong></span>
+                <span>Feuchte: <strong>${humidity != null ? humidity + ' %' : '—'}</strong></span>
+                <span>Tagesschwankung: <strong>${tSwing.toFixed(1)} °C</strong></span>
+            </div>
+            ${bioCard('🫀', 'Kreislauf',    Math.min(kreislauf, 2), kreislaufHint())}
+            ${bioCard('🧠', 'Kopf / Migräne', Math.min(migraene, 2), migraeneHint())}
+            ${bioCard('🦴', 'Gelenke',      Math.min(gelenke,   2), gelenkeHint())}
+            ${bioCard('🫁', 'Atemwege',     Math.min(atemwege,  2), atemwegeHint())}
+            ${bioCard('😴', 'Schlaf',       Math.min(schlaf,    2), schlafHint())}
+            <p class="bio-disclaimer">Bio-Wetter basiert auf meteorologischen Schwellenwerten. Keine medizinische Aussage.</p>
+        </div>
+    `;
+    document.getElementById('bioWelcome').classList.add('hidden');
+    document.getElementById('bioContent').classList.remove('hidden');
 }
 
 // =====================================================
