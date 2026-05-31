@@ -883,6 +883,7 @@ function renderUV(data) {
 
         // SVG-Bogen
         const arcColor = getComputedStyle(document.documentElement).getPropertyValue('--border').trim() || 'rgba(148,163,184,0.2)';
+        const locTimeStr = pad(nowAtLoc.getUTCHours()) + ':' + pad(nowAtLoc.getUTCMinutes());
         arcHtml = `<svg class="sun-arc-svg" viewBox="0 0 300 110">
             <path d="M ${cx-r} ${cy} A ${r} ${r} 0 0 1 ${cx+r} ${cy}" fill="none" stroke="rgba(148,163,184,0.25)" stroke-width="3"/>
             <path d="M ${cx-r} ${cy} A ${r} ${r} 0 0 1 ${sunX.toFixed(1)} ${sunY.toFixed(1)}" fill="none" stroke="#eab308" stroke-width="3" stroke-linecap="round"/>
@@ -894,6 +895,7 @@ function renderUV(data) {
             }
             <text x="${cx-r}" y="${cy+16}" text-anchor="middle" fill="var(--text-muted)" font-size="10" font-family="sans-serif">${srTime}</text>
             <text x="${cx+r}" y="${cy+16}" text-anchor="middle" fill="var(--text-muted)" font-size="10" font-family="sans-serif">${ssTime}</text>
+            <text x="${cx}" y="${cy+28}" text-anchor="middle" fill="var(--text-muted)" font-size="11" font-family="sans-serif">🕐 Ortszeit: ${locTimeStr} Uhr</text>
         </svg>`;
 
         const dayH = Math.floor(total / 60);
