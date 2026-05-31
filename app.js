@@ -530,7 +530,7 @@ function setMapHeight(vh) {
 function showPanel() {
     panelVisible = true;
     document.body.classList.remove('panel-hidden');
-    setMapHeight(38);
+    setMapHeight(28);
     mapToggleBtn.textContent = '🗕';
     mapToggleBtn.title = 'Panel ausblenden';
 }
@@ -560,7 +560,7 @@ let touchStartMapH = null;
 let isDragging     = false;
 
 // Snap-Positionen: Kartenanteil in vh
-const SNAP_VH = [18, 38, 55]; // klein=großes Panel, mittel, groß=kleines Panel
+const SNAP_VH = [18, 28, 50]; // klein=großes Panel, mittel, groß=kleines Panel
 
 dragHandle.addEventListener('touchstart', (e) => {
     touchStartY    = e.touches[0].clientY;
