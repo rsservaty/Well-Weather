@@ -1237,3 +1237,48 @@ body.panel-hidden .map-wrapper {
     color: var(--text-primary);
     margin-top: 2px;
 }
+
+/* =====================================================
+   WETTER-WARNUNGEN
+   ===================================================== */
+
+#warningsContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem 0;
+}
+
+.warning-card {
+    border-radius: var(--radius-sm);
+    padding: 0.75rem 1rem;
+    font-size: 0.85rem;
+}
+
+.warning-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    margin-bottom: 0.3rem;
+}
+
+.warning-icon { font-size: 1rem; flex-shrink: 0; margin-top: 1px; }
+
+.warning-title {
+    font-weight: 700;
+    line-height: 1.3;
+    font-size: 0.88rem;
+}
+
+.warning-desc {
+    font-size: 0.78rem;
+    opacity: 0.85;
+    margin-bottom: 0.35rem;
+    line-height: 1.4;
+}
+
+.warning-time {
+    font-size: 0.72rem;
+    opacity: 0.7;
+    font-weight: 500;
+}
