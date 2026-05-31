@@ -14,6 +14,7 @@ const CONFIG = {
     maxZoom:      12,
     weatherUrl:   'https://api.open-meteo.com/v1/forecast',
     airUrl:       'https://air-quality-api.open-meteo.com/v1/air-quality',
+    warnUrl:      'https://api.brightsky.dev/alerts',
     geocodeUrl:   'https://nominatim.openstreetmap.org/search',
     searchDelay:  400,            // ms Debounce
 };
@@ -206,11 +207,12 @@ async function loadWeatherForCoords(lat, lon, cityName) {
         forecast_days:      7,
     });
 
-    // Wetter + Luftqualität parallel laden
-    const [weatherResult, airResult] = await Promise.allSettled([
+    // Wetter + Luftqualität + Warnungen parallel laden
+    const [weatherResult, airResult, warnResult] = await Promise.allSettled([
         fetch(`${CONFIG.weatherUrl}?${params}`)
             .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); }),
         fetchAirQuality(lat, lon),
+        fetchWarnings(lat, lon),
     ]);
 
     if (weatherResult.status === 'fulfilled') {
@@ -225,6 +227,8 @@ async function loadWeatherForCoords(lat, lon, cityName) {
     if (airResult.status === 'fulfilled' && airResult.value) {
         renderAir(airResult.value);
     }
+
+    renderWarnings(warnResult.status === 'fulfilled' ? warnResult.value : null);
 }
 
 // ---- Reverse Geocoding ----
@@ -907,3 +911,78 @@ function renderUV(data) {
 initMap();
 renderMoon();       // Mond braucht keinen Standort
 tryGeolocation();   // Standort beim Laden (Browser fragt nach Erlaubnis)
+
+// =====================================================
+// WETTER-WARNUNGEN (Bright Sky API — DWD-Daten)
+// =====================================================
+async function fetchWarnings(lat, lon) {
+    try {
+        const r = await fetch(`${CONFIG.warnUrl}?lat=${lat.toFixed(4)}&lon=${lon.toFixed(4)}`);
+        if (!r.ok) return null;
+        return r.json();
+    } catch { return null; }
+}
+
+function renderWarnings(data) {
+    const container = document.getElementById('warningsContainer');
+    if (!container) return;
+
+    const alerts = data && data.alerts ? data.alerts : [];
+
+    // Nur aktive Warnungen (jetzt innerhalb onset–expires)
+    const now = Date.now();
+    const active = alerts.filter(a => {
+        const onset   = a.onset   ? new Date(a.onset).getTime()   : 0;
+        const expires = a.expires ? new Date(a.expires).getTime() : Infinity;
+        return now >= onset && now <= expires;
+    });
+
+    if (!active.length) {
+        container.innerHTML = '';
+        return;
+    }
+
+    function sevColor(sev) {
+        switch ((sev || '').toLowerCase()) {
+            case 'minor':    return { bg: '#fefce8', border: '#eab308', text: '#854d0e', icon: '⚠️' };
+            case 'moderate': return { bg: '#fff7ed', border: '#f97316', text: '#9a3412', icon: '🟠' };
+            case 'severe':   return { bg: '#fef2f2', border: '#ef4444', text: '#991b1b', icon: '🔴' };
+            case 'extreme':  return { bg: '#faf5ff', border: '#a855f7', text: '#6b21a8', icon: '🚨' };
+            default:         return { bg: '#f0f9ff', border: '#38bdf8', text: '#075985', icon: 'ℹ️' };
+        }
+    }
+
+    // Dark-Mode-Farben
+    const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+    container.innerHTML = active.map(a => {
+        const c = sevColor(a.severity);
+        const onset   = a.onset   ? new Date(a.onset).toLocaleString('de-DE',   {weekday:'short', day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'}) : '';
+        const expires = a.expires ? new Date(a.expires).toLocaleString('de-DE', {weekday:'short', day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'}) : '';
+        const bg     = isDark ? 'rgba(0,0,0,0.3)'   : c.bg;
+        const border = c.border;
+        const text   = isDark ? '#e2e8f0' : c.text;
+        return `<div class="warning-card" style="background:${bg};border-left:4px solid ${border};color:${text}">
+            <div class="warning-header">
+                <span class="warning-icon">${c.icon}</span>
+                <span class="warning-title">${a.headline || a.event || 'Wetterwarnung'}</span>
+            </div>
+            ${a.description ? `<div class="warning-desc">${a.description.slice(0, 200)}${a.description.length > 200 ? '…' : ''}</div>` : ''}
+            <div class="warning-time">
+                ${onset ? `Von: ${onset}` : ''}
+                ${expires ? ` &nbsp;|&nbsp; Bis: ${expires}` : ''}
+            </div>
+        </div>`;
+    }).join('');
+}
+
+// =====================================================
+// SERVICE WORKER REGISTRIERUNG (PWA)
+// =====================================================
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./service-worker.js')
+            .then(reg => console.log('SW aktiv:', reg.scope))
+            .catch(err => console.warn('SW Fehler:', err));
+    });
+}
