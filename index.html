@@ -28,7 +28,7 @@
                 type="text"
                 id="searchInput"
                 class="search-input"
-                placeholder="Stadt suchen... (z.B. München, Wien, Zürich)"
+                placeholder="Stadt suchen... (z.B. M&#252;nchen, Wien, Z&#252;rich)"
                 autocomplete="off"
             />
             <button id="searchBtn" class="search-btn" title="Suchen">&#128269;</button>
@@ -45,91 +45,141 @@
         <!-- Karte -->
         <div class="map-wrapper">
             <div id="map"></div>
-            <div class="map-hint">&#128205; Klick auf die Karte für Wetterdaten</div>
-            <button id="mapToggleBtn" class="map-toggle-btn" title="Karte vergrößern">&#x26F6;</button>
+            <div class="map-hint">&#128205; Klick auf die Karte f&#252;r Wetterdaten</div>
+            <button id="mapToggleBtn" class="map-toggle-btn" title="Karte vergr&#246;&#223;ern">&#x26F6;</button>
             <button id="locateBtn" class="map-locate-btn" title="Meinen Standort anzeigen">&#127919;</button>
         </div>
 
         <!-- Wetter-Panel -->
         <aside class="weather-panel" id="weatherPanel">
-            <!-- Drag-Handle -->
+
+            <!-- Drag-Handle (Mobile) -->
             <div class="drag-handle" id="dragHandle">
                 <div class="drag-handle-bar"></div>
             </div>
 
-            <!-- Willkommens-State -->
-            <div class="welcome-state" id="welcomeState">
-                <div class="welcome-icon">&#9928;</div>
-                <h2>Willkommen!</h2>
-                <p>Klicke auf einen Ort in der Karte oder suche eine Stadt, um das Wetter anzuzeigen.</p>
+            <!-- Tab-Leiste -->
+            <div class="tab-bar">
+                <button class="tab-btn active" data-tab="wetter">
+                    <span class="tab-icon">&#127780;&#65039;</span>
+                    <span class="tab-label">Wetter</span>
+                </button>
+                <button class="tab-btn" data-tab="luft">
+                    <span class="tab-icon">&#127782;&#65039;</span>
+                    <span class="tab-label">Luft &amp; Pollen</span>
+                </button>
+                <button class="tab-btn" data-tab="mond">
+                    <span class="tab-icon">&#127769;</span>
+                    <span class="tab-label">Mond</span>
+                </button>
+                <button class="tab-btn" data-tab="uv">
+                    <span class="tab-icon">&#9728;&#65039;</span>
+                    <span class="tab-label">UV &amp; Sonne</span>
+                </button>
             </div>
 
-            <!-- Ladeindikator -->
-            <div class="loading-state hidden" id="loadingState">
-                <div class="spinner"></div>
-                <p>Wetterdaten werden geladen...</p>
-            </div>
+            <!-- ===== TAB: WETTER ===== -->
+            <div class="tab-content active" id="tab-wetter">
 
-            <!-- Fehler-State -->
-            <div class="error-state hidden" id="errorState">
-                <div class="error-icon">&#9888;</div>
-                <p id="errorMessage">Fehler beim Laden der Wetterdaten.</p>
-                <button onclick="retryLastLocation()" class="retry-btn">Nochmal versuchen</button>
-            </div>
-
-            <!-- Wetter-Inhalt -->
-            <div class="weather-content hidden" id="weatherContent">
-
-                <!-- Ort & Aktuell -->
-                <div class="current-weather">
-                    <div class="location-info">
-                        <h2 id="locationName">-</h2>
-                        <span id="locationCountry" class="country-badge"></span>
-                    </div>
-                    <div class="current-main">
-                        <span id="currentIcon" class="weather-icon-large"></span>
-                        <div class="current-temp-block">
-                            <span id="currentTemp" class="current-temp">-</span>
-                            <span id="currentDesc" class="current-desc">-</span>
-                        </div>
-                    </div>
-                    <div class="current-details">
-                        <div class="detail-item">
-                            <span class="detail-label">&#127754; Gefühlt</span>
-                            <span id="feelsLike" class="detail-value">-</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="detail-label">&#128167; Niederschlag</span>
-                            <span id="precipitation" class="detail-value">-</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="detail-label">&#128168; Wind</span>
-                            <span id="windSpeed" class="detail-value">-</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="detail-label">&#128065; Sichtweite</span>
-                            <span id="humidity" class="detail-value">-</span>
-                        </div>
-                    </div>
+                <!-- Willkommens-State -->
+                <div class="welcome-state" id="welcomeState">
+                    <div class="welcome-icon">&#9928;</div>
+                    <h2>Willkommen!</h2>
+                    <p>Klicke auf einen Ort in der Karte oder suche eine Stadt, um das Wetter anzuzeigen.</p>
                 </div>
 
-                <!-- Divider -->
-                <div class="section-divider">
-                    <span>7-Tage-Vorhersage</span>
+                <!-- Ladeindikator -->
+                <div class="loading-state hidden" id="loadingState">
+                    <div class="spinner"></div>
+                    <p>Wetterdaten werden geladen...</p>
                 </div>
 
-                <!-- 7-Tage-Vorhersage -->
-                <div class="forecast-grid" id="forecastGrid">
-                    <!-- Wird per JS befüllt -->
+                <!-- Fehler-State -->
+                <div class="error-state hidden" id="errorState">
+                    <div class="error-icon">&#9888;</div>
+                    <p id="errorMessage">Fehler beim Laden der Wetterdaten.</p>
+                    <button onclick="retryLastLocation()" class="retry-btn">Nochmal versuchen</button>
                 </div>
 
+                <!-- Wetter-Inhalt -->
+                <div class="weather-content hidden" id="weatherContent">
+
+                    <!-- Ort & Aktuell -->
+                    <div class="current-weather">
+                        <div class="location-info">
+                            <h2 id="locationName">-</h2>
+                            <span id="locationCountry" class="country-badge"></span>
+                        </div>
+                        <div class="current-main">
+                            <span id="currentIcon" class="weather-icon-large"></span>
+                            <div class="current-temp-block">
+                                <span id="currentTemp" class="current-temp">-</span>
+                                <span id="currentDesc" class="current-desc">-</span>
+                            </div>
+                        </div>
+                        <div class="current-details">
+                            <div class="detail-item">
+                                <span class="detail-label">&#127754; Gef&#252;hlt</span>
+                                <span id="feelsLike" class="detail-value">-</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">&#128167; Niederschlag</span>
+                                <span id="precipitation" class="detail-value">-</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">&#128168; Wind</span>
+                                <span id="windSpeed" class="detail-value">-</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">&#128065; Sichtweite</span>
+                                <span id="humidity" class="detail-value">-</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Divider -->
+                    <div class="section-divider">
+                        <span>7-Tage-Vorhersage</span>
+                    </div>
+
+                    <!-- 7-Tage-Vorhersage -->
+                    <div class="forecast-grid" id="forecastGrid"></div>
+
+                </div>
             </div>
+
+            <!-- ===== TAB: LUFT & POLLEN ===== -->
+            <div class="tab-content" id="tab-luft">
+                <div class="welcome-state" id="luftWelcome">
+                    <div class="welcome-icon">&#127782;&#65039;</div>
+                    <h2>Luft &amp; Pollen</h2>
+                    <p>Bitte zuerst einen Ort auf der Karte w&#228;hlen.</p>
+                </div>
+                <div class="hidden" id="luftContent"></div>
+            </div>
+
+            <!-- ===== TAB: MOND ===== -->
+            <div class="tab-content" id="tab-mond">
+                <div id="mondContent"></div>
+            </div>
+
+            <!-- ===== TAB: UV & SONNE ===== -->
+            <div class="tab-content" id="tab-uv">
+                <div class="welcome-state" id="uvWelcome">
+                    <div class="welcome-icon">&#9728;&#65039;</div>
+                    <h2>UV &amp; Sonne</h2>
+                    <p>Bitte zuerst einen Ort auf der Karte w&#228;hlen.</p>
+                </div>
+                <div class="hidden" id="uvContent"></div>
+            </div>
+
         </aside>
     </main>
 
     <!-- ===== FOOTER ===== -->
     <footer class="app-footer">
-        <span>Wetterdaten: <a href="https://open-meteo.com" target="_blank">Open-Meteo</a> (basierend auf DWD &amp; ECMWF)</span>
+        <span>Wetterdaten: <a href="https://open-meteo.com" target="_blank">Open-Meteo</a> (DWD &amp; ECMWF)</span>
+        <span>Luftqualit&#228;t: <a href="https://open-meteo.com" target="_blank">Open-Meteo Air Quality</a></span>
         <span>Karte: <a href="https://www.openstreetmap.org" target="_blank">OpenStreetMap</a></span>
         <span>Geocoding: <a href="https://nominatim.org" target="_blank">Nominatim</a></span>
     </footer>
