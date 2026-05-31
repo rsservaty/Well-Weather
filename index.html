@@ -28,7 +28,7 @@
     <header class="app-header">
         <div class="header-left">
             <span class="logo">&#9928;</span>
-            <h1>Wetter-Punk.de</h1>
+            <h1 id="appTitle" style="cursor:pointer" title="Zum aktuellen Standort">Wetter-Punk.de</h1>
         </div>
         <div class="search-container">
             <input
@@ -205,7 +205,27 @@
         <span>Luftqualit&#228;t: <a href="https://open-meteo.com" target="_blank">Open-Meteo Air Quality</a></span>
         <span>Karte: <a href="https://www.openstreetmap.org" target="_blank">OpenStreetMap</a></span>
         <span>Geocoding: <a href="https://nominatim.org" target="_blank">Nominatim</a></span>
+        <span><a href="#" id="impressumLink">Impressum</a></span>
     </footer>
+
+    <!-- Impressum Modal -->
+    <div id="impressumModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9999;overflow-y:auto">
+        <div style="background:var(--bg-primary);max-width:480px;margin:40px auto;border-radius:16px;padding:28px 24px;position:relative">
+            <button id="impressumClose" style="position:absolute;top:14px;right:16px;background:none;border:none;font-size:1.4rem;cursor:pointer;color:var(--text-muted)">✕</button>
+            <h2 style="margin:0 0 16px;color:var(--text-primary)">Impressum</h2>
+            <p style="color:var(--text-secondary);font-size:0.9rem;line-height:1.6">
+                Angaben gem&auml;&szlig; &sect; 5 TMG<br><br>
+                <strong>[Dein Name]</strong><br>
+                [Deine Adresse]<br>
+                [PLZ Ort]<br><br>
+                <strong>Kontakt:</strong><br>
+                E-Mail: [deine@email.de]<br><br>
+                <strong>Haftungsausschluss:</strong><br>
+                Diese App dient zur Information. Wetterdaten werden von Open-Meteo bereitgestellt. 
+                Keine Gew&auml;hr f&uuml;r Richtigkeit und Vollst&auml;ndigkeit der Daten.
+            </p>
+        </div>
+    </div>
 
     <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
