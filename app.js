@@ -544,11 +544,7 @@ dragHandle.addEventListener('click', togglePanel);
 // Toggle-Button
 mapToggleBtn.addEventListener('click', togglePanel);
 
-// ---- App starten ----
-initMap();
-renderMoon(); // Mond braucht keinen Standort
-// Standort beim Laden automatisch ermitteln (Browser fragt nach Erlaubnis)
-tryGeolocation();
+// ---- App starten (am Ende des Files) ----
 
 
 // =====================================================
@@ -843,3 +839,10 @@ function renderUV(data) {
     document.getElementById('uvWelcome').classList.add('hidden');
     document.getElementById('uvContent').classList.remove('hidden');
 }
+
+// =====================================================
+// APP STARTEN — nach allen Definitionen
+// =====================================================
+initMap();
+renderMoon();       // Mond braucht keinen Standort
+tryGeolocation();   // Standort beim Laden (Browser fragt nach Erlaubnis)
