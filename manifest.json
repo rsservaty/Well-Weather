@@ -1,6 +1,6 @@
 {
   "name": "Wetter-Punk.de",
-  "short_name": "Wetter",
+  "short_name": "Wetter-Punk",
   "description": "Europäische Wetter-App mit interaktiver Karte, Luftqualität, Mondkalender und UV-Index",
   "start_url": ".",
   "scope": ".",
