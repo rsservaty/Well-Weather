@@ -857,12 +857,17 @@ function renderUV(data) {
     let statsHtml = '';
 
     if (sunrise && sunset) {
-        const sr  = new Date(sunrise);
-        const ss  = new Date(sunset);
-        const now = new Date();
-        const srM = sr.getHours() * 60 + sr.getMinutes();
-        const ssM = ss.getHours() * 60 + ss.getMinutes();
-        const nowM = now.getHours() * 60 + now.getMinutes();
+        // Zeiten direkt als Strings parsen (Open-Meteo liefert lokale Ortszeit)
+        const srTime = sunrise.slice(11, 16); // "05:04"
+        const ssTime = sunset.slice(11, 16);  // "19:22"
+        const [srH, srMin] = srTime.split(':').map(Number);
+        const [ssH, ssMin] = ssTime.split(':').map(Number);
+        const srM  = srH * 60 + srMin;
+        const ssM  = ssH * 60 + ssMin;
+        // Aktuelle Ortszeit des gewählten Standorts via utc_offset_seconds
+        const utcOffsetSec = data.utc_offset_seconds || 0;
+        const nowAtLoc = new Date(Date.now() + utcOffsetSec * 1000);
+        const nowM = nowAtLoc.getUTCHours() * 60 + nowAtLoc.getUTCMinutes();
         const total   = ssM - srM;
         const elapsed = Math.max(0, Math.min(1, (nowM - srM) / total));
         const isDaytime = nowM >= srM && nowM <= ssM;
@@ -883,15 +888,15 @@ function renderUV(data) {
                    <circle cx="${sunX.toFixed(1)}" cy="${sunY.toFixed(1)}" r="18" fill="#eab308" opacity="0.12"/>`
                 : `<circle cx="${sunX.toFixed(1)}" cy="${sunY.toFixed(1)}" r="8" fill="none" stroke="#eab308" stroke-width="2" opacity="0.5"/>`
             }
-            <text x="${cx-r}" y="${cy+16}" text-anchor="middle" fill="var(--text-muted)" font-size="10" font-family="sans-serif">${sr.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})}</text>
-            <text x="${cx+r}" y="${cy+16}" text-anchor="middle" fill="var(--text-muted)" font-size="10" font-family="sans-serif">${ss.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})}</text>
+            <text x="${cx-r}" y="${cy+16}" text-anchor="middle" fill="var(--text-muted)" font-size="10" font-family="sans-serif">${srTime}</text>
+            <text x="${cx+r}" y="${cy+16}" text-anchor="middle" fill="var(--text-muted)" font-size="10" font-family="sans-serif">${ssTime}</text>
         </svg>`;
 
         const dayH = Math.floor(total / 60);
         const dayM = total % 60;
         statsHtml = `<div class="sun-stats-grid">
-            <div class="sun-stat"><div class="sun-stat-label">🌅 Sonnenaufgang</div><div class="sun-stat-value">${sr.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})} Uhr</div></div>
-            <div class="sun-stat"><div class="sun-stat-label">🌇 Sonnenuntergang</div><div class="sun-stat-value">${ss.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})} Uhr</div></div>
+            <div class="sun-stat"><div class="sun-stat-label">🌅 Sonnenaufgang</div><div class="sun-stat-value">${srTime} Uhr</div></div>
+            <div class="sun-stat"><div class="sun-stat-label">🌇 Sonnenuntergang</div><div class="sun-stat-value">${ssTime} Uhr</div></div>
             <div class="sun-stat"><div class="sun-stat-label">⏱️ Tageslänge</div><div class="sun-stat-value">${dayH}h ${dayM}min</div></div>
             <div class="sun-stat"><div class="sun-stat-label">☀️ UV max. heute</div><div class="sun-stat-value">${uvMax != null ? uvMax.toFixed(1) : '—'}</div></div>
         </div>`;
