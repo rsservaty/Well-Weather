@@ -625,12 +625,22 @@ mapToggleBtn.addEventListener('click', togglePanel);
 // =====================================================
 // TAB-SWITCHING
 // =====================================================
+function closeBioCards() {
+    document.querySelectorAll('.bio-card-toggle').forEach(card => {
+        const detail = document.getElementById(card.dataset.detail);
+        const arrow  = card.querySelector('.bio-arrow');
+        if (detail) detail.style.display = 'none';
+        if (arrow)  arrow.textContent = '▼';
+    });
+}
+
 document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
         document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
         btn.classList.add('active');
         document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+        closeBioCards();
 
         // Mobile: Panel anzeigen falls versteckt, aber Größe beibehalten
         if (window.matchMedia('(max-width: 768px)').matches) {
@@ -1295,15 +1305,20 @@ function renderBio(data, airData) {
     document.getElementById('bioWelcome').classList.add('hidden');
     document.getElementById('bioContent').classList.remove('hidden');
 
-    // Klick-Handler für alle Bio-Karten
+    // Klick-Handler: nur eine Karte offen (Accordion)
     document.querySelectorAll('.bio-card-toggle').forEach(card => {
         card.addEventListener('click', () => {
             const detail = document.getElementById(card.dataset.detail);
             const arrow  = card.querySelector('.bio-arrow');
             if (!detail) return;
             const isOpen = detail.style.display === 'block';
-            detail.style.display = isOpen ? 'none' : 'block';
-            arrow.textContent = isOpen ? '▼' : '▲';
+            // Alle schließen
+            closeBioCards();
+            // Angeklickte öffnen (wenn sie vorher zu war)
+            if (!isOpen) {
+                detail.style.display = 'block';
+                arrow.textContent = '▲';
+            }
         });
     });
 }
@@ -1311,6 +1326,26 @@ function renderBio(data, airData) {
 // =====================================================
 // SERVICE WORKER REGISTRIERUNG (PWA)
 // =====================================================
+// Titel-Klick → Wetter Tab + aktueller Standort
+const appTitle = document.getElementById('appTitle');
+if (appTitle) {
+    appTitle.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        document.querySelector('[data-tab="wetter"]').classList.add('active');
+        document.getElementById('tab-wetter').classList.add('active');
+        tryGeolocation();
+    });
+}
+
+// Impressum Modal
+const impressumLink  = document.getElementById('impressumLink');
+const impressumModal = document.getElementById('impressumModal');
+const impressumClose = document.getElementById('impressumClose');
+if (impressumLink) impressumLink.addEventListener('click', e => { e.preventDefault(); impressumModal.style.display = 'block'; });
+if (impressumClose) impressumClose.addEventListener('click', () => { impressumModal.style.display = 'none'; });
+if (impressumModal) impressumModal.addEventListener('click', e => { if (e.target === impressumModal) impressumModal.style.display = 'none'; });
+
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('./service-worker.js')
