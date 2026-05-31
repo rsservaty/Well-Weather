@@ -538,8 +538,69 @@ function togglePanel() {
     }
 }
 
-// Tippen auf den Handle-Balken
+// Tippen auf den Handle-Balken (Click für Desktop/Tap)
 dragHandle.addEventListener('click', togglePanel);
+
+// ---- Drag-to-Resize (Mobile Touch) ----
+let touchStartY    = null;
+let touchStartMapH = null;
+let isDragging     = false;
+
+// Snap-Positionen: Kartenanteil in vh
+const SNAP_VH = [18, 38, 55]; // klein=großes Panel, mittel, groß=kleines Panel
+
+dragHandle.addEventListener('touchstart', (e) => {
+    touchStartY    = e.touches[0].clientY;
+    touchStartMapH = mapWrapper.getBoundingClientRect().height;
+    isDragging     = false;
+    // Panel einblenden falls versteckt
+    if (!panelVisible) {
+        document.body.classList.remove('panel-hidden');
+        panelVisible   = true;
+        touchStartMapH = window.innerHeight * 0.55;
+    }
+}, { passive: true });
+
+dragHandle.addEventListener('touchmove', (e) => {
+    if (touchStartY === null) return;
+    const dy = e.touches[0].clientY - touchStartY;
+    if (!isDragging && Math.abs(dy) > 8) isDragging = true;
+    if (!isDragging) return;
+
+    const newMapVh = Math.max(10, Math.min(88,
+        ((touchStartMapH + dy) / window.innerHeight) * 100
+    ));
+    mapWrapper.style.transition = 'none';
+    mapWrapper.style.height     = newMapVh + 'vh';
+    map.invalidateSize();
+    e.preventDefault();
+}, { passive: false });
+
+dragHandle.addEventListener('touchend', (e) => {
+    if (!isDragging || touchStartY === null) {
+        touchStartY = null; touchStartMapH = null; isDragging = false;
+        return; // war ein Tap → click-Event läuft normal
+    }
+    e.preventDefault(); // Verhindert click nach Drag
+
+    const currentVh = (mapWrapper.getBoundingClientRect().height / window.innerHeight) * 100;
+
+    if (currentVh > 72) {
+        // Weit runter gezogen → Panel ausblenden
+        hidePanel();
+    } else {
+        // Zum nächsten Snap-Punkt snappen
+        const target = SNAP_VH.reduce((a, b) =>
+            Math.abs(b - currentVh) < Math.abs(a - currentVh) ? b : a
+        );
+        mapWrapper.style.transition = 'height 0.25s ease';
+        mapWrapper.style.height     = target + 'vh';
+        panelVisible = true;
+        document.body.classList.remove('panel-hidden');
+        setTimeout(() => { mapWrapper.style.transition = ''; map.invalidateSize(); }, 270);
+    }
+    touchStartY = null; touchStartMapH = null; isDragging = false;
+}, { passive: false });
 
 // Toggle-Button
 mapToggleBtn.addEventListener('click', togglePanel);
