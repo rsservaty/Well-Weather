@@ -876,7 +876,7 @@ function renderUV(data) {
         const elapsed = Math.max(0, Math.min(1, (nowM - srM) / total));
         const isDaytime = nowM >= srM && nowM <= ssM;
 
-        const cx = 150, cy = 100, r = 78;
+        const cx = 150, cy = 85, r = 75;
         const sunAngle = Math.PI - elapsed * Math.PI;
         const sunX = cx + r * Math.cos(sunAngle);
         const sunY = cy - r * Math.sin(sunAngle);
@@ -885,7 +885,7 @@ function renderUV(data) {
         const arcColor = getComputedStyle(document.documentElement).getPropertyValue('--border').trim() || 'rgba(148,163,184,0.2)';
         const pad = n => String(n).padStart(2, '0');
         const locTimeStr = pad(nowAtLoc.getUTCHours()) + ':' + pad(nowAtLoc.getUTCMinutes());
-        arcHtml = `<svg class="sun-arc-svg" viewBox="0 0 300 110">
+        arcHtml = `<svg class="sun-arc-svg" viewBox="0 0 300 120">
             <path d="M ${cx-r} ${cy} A ${r} ${r} 0 0 1 ${cx+r} ${cy}" fill="none" stroke="rgba(148,163,184,0.25)" stroke-width="3"/>
             <path d="M ${cx-r} ${cy} A ${r} ${r} 0 0 1 ${sunX.toFixed(1)} ${sunY.toFixed(1)}" fill="none" stroke="#eab308" stroke-width="3" stroke-linecap="round"/>
             <line x1="${cx-r-6}" y1="${cy}" x2="${cx+r+6}" y2="${cy}" stroke="rgba(148,163,184,0.2)" stroke-width="1"/>
