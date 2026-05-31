@@ -1381,3 +1381,36 @@ body.panel-hidden .map-wrapper {
 }
 .warn-active { background: #ef4444; color: #fff; }
 .warn-soon   { background: #f97316; color: #fff; }
+
+/* ---- Bio 24h Vorschau ---- */
+.bio-arrow {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    margin-left: 4px;
+}
+.bio-detail-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin: 10px 0 6px 28px;
+}
+.bio-hourly {
+    display: flex;
+    overflow-x: auto;
+    gap: 4px;
+    padding: 0 4px 8px;
+    scrollbar-width: none;
+}
+.bio-hourly::-webkit-scrollbar { display: none; }
+.bio-hour-block {
+    flex: 0 0 auto;
+    width: 36px;
+    padding: 6px 4px 4px;
+    border-radius: 6px;
+    text-align: center;
+    cursor: default;
+}
+.bio-hour-time {
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    display: block;
+}
