@@ -1187,12 +1187,12 @@ function renderBio(data, airData) {
                 <span>Feuchte: <strong>${humidity != null ? humidity + ' %' : '—'}</strong></span>
                 <span>Tagesschwankung: <strong>${tSwing.toFixed(1)} °C</strong></span>
             </div>
-            ${bioCard('🫀', 'Kreislauf',    Math.min(kreislauf, 2), kreislaufHint())}
-            ${bioCard('🧠', 'Kopf / Migräne', Math.min(migraene, 2), migraeneHint())}
-            ${bioCard('🦴', 'Gelenke',      Math.min(gelenke,   2), gelenkeHint())}
-            ${bioCard('🫁', 'Atemwege',     Math.min(atemwege,  2), atemwegeHint())}
-            ${bioCard('😴', 'Schlaf',       Math.min(schlaf,    2), schlafHint())}
-            ${bioCard('🏃', 'Outdoor Sport', Math.min(sport,     2), sportHint())}
+            ${bioCard('🏃', 'Outdoor Sport',  Math.min(sport,     2), sportHint())}
+            ${bioCard('😴', 'Schlaf',          Math.min(schlaf,    2), schlafHint())}
+            ${bioCard('🫀', 'Kreislauf',        Math.min(kreislauf, 2), kreislaufHint())}
+            ${bioCard('🧠', 'Kopf / Migräne',  Math.min(migraene,  2), migraeneHint())}
+            ${bioCard('🦴', 'Gelenke',          Math.min(gelenke,   2), gelenkeHint())}
+            ${bioCard('🫁', 'Atemwege',         Math.min(atemwege,  2), atemwegeHint())}
             <p class="bio-disclaimer">Bio-Wetter basiert auf meteorologischen Schwellenwerten. Keine medizinische Aussage.</p>
         </div>
     `;
