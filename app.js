@@ -208,7 +208,7 @@ async function loadWeatherForCoords(lat, lon, cityName) {
         wind_speed_unit:    'kmh',
         timezone:           'auto',
         forecast_days:      7,
-        past_days:          1,
+        past_hours:         24,
     });
 
     // Wetter + Luftqualität + Warnungen parallel laden
@@ -1038,12 +1038,12 @@ function renderBio(data, airData) {
     const pressureDiff = (pNow != null && p24ago != null) ? (pNow - p24ago) : 0;
 
     // Temperatur-Schwankung heute (Max - Min)
-    const tMax   = (daily.temperature_2m_max || [])[1] ?? null; // [1] = heute (past_days verschiebt)
-    const tMin   = (daily.temperature_2m_min || [])[1] ?? null;
+    const tMax   = (daily.temperature_2m_max || [])[0] ?? null; // [0] = heute
+    const tMin   = (daily.temperature_2m_min || [])[0] ?? null;
     const tSwing = (tMax != null && tMin != null) ? (tMax - tMin) : 0;
 
     // Temperaturwechsel zu morgen
-    const tTomMax = (daily.temperature_2m_max || [])[2] ?? null;
+    const tTomMax = (daily.temperature_2m_max || [])[1] ?? null;
     const tChange = (tMax != null && tTomMax != null) ? (tTomMax - tMax) : 0;
 
     // Pollen (Maximum aller Arten)
