@@ -244,21 +244,13 @@ async function loadWeatherForCoords(lat, lon, cityName) {
 // ---- Reverse Geocoding ----
 async function reverseGeocode(lat, lon) {
     try {
-        const url = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&accept-language=de,en&namedetails=1`;
+        const url = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&accept-language=de,en`;
         const resp = await fetch(url, { headers: { 'Accept-Language': 'de,en' } });
         if (!resp.ok) return `${lat.toFixed(2)}°N ${lon.toFixed(2)}°E`;
         const data = await resp.json();
         const addr = data.address || {};
-        const nd   = data.namedetails || {};
-        // Reihenfolge: Deutsch → Englisch → International → display_name → Adresse → Koordinate
-        const name = nd['name:de']   ||
-                     nd['name:en']   ||
-                     nd['int_name']  ||
-                     nd['name:latin']||
-                     (data.display_name ? data.display_name.split(',')[0].trim() : null) ||
-                     addr.city || addr.town || addr.village || addr.county ||
-                     `${lat.toFixed(2)}°N ${lon.toFixed(2)}°E`;
-        return name;
+        return addr.city || addr.town || addr.village || addr.county ||
+               `${lat.toFixed(2)}°N ${lon.toFixed(2)}°E`;
     } catch {
         return `${lat.toFixed(2)}°N ${lon.toFixed(2)}°E`;
     }
