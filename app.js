@@ -540,7 +540,12 @@ function setMapHeight(vh) {
 function showPanel() {
     panelVisible = true;
     document.body.classList.remove('panel-hidden');
-    setMapHeight(28);
+    if (window.matchMedia('(max-width: 768px)').matches) {
+        setMapHeight(28);
+    } else {
+        mapWrapper.style.height = '';
+        setTimeout(() => { map.invalidateSize(); }, 50);
+    }
     mapToggleBtn.textContent = '🗕';
     mapToggleBtn.title = 'Panel ausblenden';
 }
@@ -548,6 +553,9 @@ function showPanel() {
 function hidePanel() {
     panelVisible = false;
     document.body.classList.add('panel-hidden');
+    if (!window.matchMedia('(max-width: 768px)').matches) {
+        mapWrapper.style.height = '';
+    }
     setTimeout(() => { map.invalidateSize(); }, 50);
     mapToggleBtn.textContent = '⛶';
     mapToggleBtn.title = 'Panel einblenden';
