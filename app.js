@@ -483,6 +483,7 @@ locateBtn.addEventListener('click', () => {
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
             document.querySelector('[data-tab="wetter"]').classList.add('active');
             document.getElementById('tab-wetter').classList.add('active');
+            if (!panelVisible) showPanel();
             map.setView([pos.coords.latitude, pos.coords.longitude], 10, { animate: true });
             loadWeatherForCoords(pos.coords.latitude, pos.coords.longitude);
         },
@@ -1351,6 +1352,7 @@ if (appTitle) {
         document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
         document.querySelector('[data-tab="wetter"]').classList.add('active');
         document.getElementById('tab-wetter').classList.add('active');
+        if (!panelVisible) showPanel();
         tryGeolocation();
     });
 }
