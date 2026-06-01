@@ -418,6 +418,10 @@ async function searchCity(query) {
                     els.searchInput.value = city;
                     els.searchResults.innerHTML = '';
                     els.searchResults.classList.add('hidden');
+                    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                    document.querySelector('[data-tab="wetter"]').classList.add('active');
+                    document.getElementById('tab-wetter').classList.add('active');
                     loadWeatherForCoords(parseFloat(r.lat), parseFloat(r.lon), city);
                 });
                 els.searchResults.appendChild(li);
