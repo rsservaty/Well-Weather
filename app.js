@@ -250,9 +250,12 @@ async function reverseGeocode(lat, lon) {
         const data = await resp.json();
         const addr = data.address || {};
         const nd   = data.namedetails || {};
-        const name = nd['name:de'] || nd['name:en'] || nd['name:latin'] ||
+        // display_name respektiert accept-language am zuverlässigsten
+        const fromDisplay = data.display_name ? data.display_name.split(',')[0].trim() : null;
+        const name = nd['name:de'] || nd['name:en'] || nd['int_name'] || nd['name:latin'] ||
+                     fromDisplay ||
                      addr.city || addr.town || addr.village || addr.county ||
-                     data.display_name.split(',')[0];
+                     `${lat.toFixed(2)}°N ${lon.toFixed(2)}°E`;
         return name;
     } catch {
         return `${lat.toFixed(2)}°N ${lon.toFixed(2)}°E`;
