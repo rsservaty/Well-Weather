@@ -474,6 +474,11 @@ locateBtn.addEventListener('click', () => {
         (pos) => {
             locateBtn.classList.remove('locating');
             locateBtn.title = 'Meinen Standort anzeigen';
+            // Zum Wetter Tab wechseln
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.querySelector('[data-tab="wetter"]').classList.add('active');
+            document.getElementById('tab-wetter').classList.add('active');
             map.setView([pos.coords.latitude, pos.coords.longitude], 10, { animate: true });
             loadWeatherForCoords(pos.coords.latitude, pos.coords.longitude);
         },
