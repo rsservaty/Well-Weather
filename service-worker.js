@@ -3,7 +3,7 @@
    Strategie: Static Assets cached, API-Calls live
    ===================================================== */
 
-const CACHE = 'wetter-europa-v38';
+const CACHE = 'wetter-europa-v39';
 
 const STATIC = [
     './',
@@ -43,7 +43,9 @@ self.addEventListener('fetch', e => {
     const isApi = url.includes('open-meteo.com') ||
                   url.includes('brightsky.dev') ||
                   url.includes('nominatim.openstreetmap.org') ||
-                  url.includes('tile.openstreetmap.org');
+                  url.includes('tile.openstreetmap.org') ||
+                  url.includes('opendata.dwd.de') ||
+                  url.includes('basemaps.cartocdn.com');
 
     if (isApi) {
         e.respondWith(
