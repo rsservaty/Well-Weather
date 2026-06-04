@@ -256,6 +256,7 @@ async function loadWeatherForCoords(lat, lon, cityName) {
             'weather_code',
             'pressure_msl',
             'relative_humidity_2m',
+            'cloud_cover',
         ].join(','),
         current:     [
             'temperature_2m',
@@ -1463,6 +1464,14 @@ function renderBio(data, airData) {
     if (pressureDiff < -3)      schlaf += 1;
     if (humidity != null && humidity > 80) schlaf += 1;
 
+    // Tagesmüdigkeit
+    let muedigkeit = 0;
+    if (pressureDiff < -6)       muedigkeit += 2;
+    else if (pressureDiff < -3)  muedigkeit += 1;
+    const cloudCover = (hourly.cloud_cover || [])[hIdx] ?? null;
+    if (cloudCover != null && cloudCover > 80) muedigkeit += 1;
+    if (temp != null && humidity != null && temp > 24 && humidity > 70) muedigkeit += 1;
+
     // Outdoor Sport
     let sport = 0;
     if (hasThunder)                                          sport += 2;
@@ -1510,6 +1519,14 @@ function renderBio(data, airData) {
             }
             case 'kreislauf':
                 return Math.min(kreislauf, 2);
+            case 'muedigkeit': {
+                let s = 0;
+                if (pressureDiff < -6) s += 2; else if (pressureDiff < -3) s += 1;
+                const cc = (hourly.cloud_cover || [])[i] ?? null;
+                if (cc != null && cc > 80) s += 1;
+                if (t != null && h != null && t > 24 && h > 70) s += 1;
+                return Math.min(s, 2);
+            }
             case 'migraene': {
                 let s = 0;
                 if (pressureDiff < -5) s += 2; else if (pressureDiff < -2) s += 1;
@@ -1593,6 +1610,13 @@ function renderBio(data, airData) {
         if (maxPollen > 10) return 'Mäßige Pollenbelastung vorhanden.';
         return 'Luft für Atemwege weitgehend unbelastet.';
     }
+    function muedigkeitHint() {
+        if (pressureDiff < -6) return 'Deutlicher Druckabfall — Antriebslosigkeit und Müdigkeit wahrscheinlich.';
+        if (pressureDiff < -3) return 'Leichter Druckabfall — kann die Tagesvitalität dämpfen.';
+        if (temp != null && humidity != null && temp > 24 && humidity > 70) return 'Schwüle Luft — der Körper arbeitet mehr, das kostet Energie.';
+        if (cloudCover != null && cloudCover > 80) return 'Trübes Licht mindert die Serotoninproduktion — etwas mehr Müdigkeit möglich.';
+        return 'Gute Voraussetzungen für einen wachen, energiereichen Tag.';
+    }
     function schlafHint() {
         if (tSwing > 12) return 'Große Temperaturschwankung heute — Schlaf kann unruhig sein.';
         if (tSwing > 8) return 'Spürbare Temperaturdifferenz zwischen Tag und Nacht.';
@@ -1628,6 +1652,7 @@ function renderBio(data, airData) {
             ${bioCard('🏃', 'Outdoor Sport',  Math.min(sport,     2), sportHint(),     'sport')}
             ${bioCard('😴', 'Schlaf',          Math.min(schlaf,    2), schlafHint(),    'schlaf')}
             ${bioCard('🫀', 'Kreislauf',        Math.min(kreislauf, 2), kreislaufHint(), 'kreislauf')}
+            ${bioCard('😪', 'Tagesmüdigkeit',  Math.min(muedigkeit,2), muedigkeitHint(),'muedigkeit')}
             ${bioCard('🧠', 'Kopf / Migräne',  Math.min(migraene,  2), migraeneHint(),  'migraene')}
             ${bioCard('🦴', 'Gelenke',          Math.min(gelenke,   2), gelenkeHint(),   'gelenke')}
             ${bioCard('🫁', 'Atemwege',         Math.min(atemwege,  2), atemwegeHint(),  'atemwege')}
