@@ -954,18 +954,18 @@ const MONTHS_DE = ['Januar','Februar','März','April','Mai','Juni','Juli','Augus
 // STERNZEICHEN — Mond & Sonne
 // =====================================================
 const ZODIAC = [
-    { name: 'Widder',      emoji: '♈', el: 'Feuer',  hint: 'Energie & Aktivität · Haare schneiden, Sport' },
-    { name: 'Stier',       emoji: '♉', el: 'Erde',   hint: 'Beständigkeit · Gartenpflege, Wurzelgemüse' },
-    { name: 'Zwillinge',   emoji: '♊', el: 'Luft',   hint: 'Kommunikation · Informationen sammeln' },
-    { name: 'Krebs',       emoji: '♋', el: 'Wasser', hint: 'Fürsorge · Gießen, Blattpflanzen' },
-    { name: 'Löwe',        emoji: '♌', el: 'Feuer',  hint: 'Ausdruck & Kraft · Obst, Früchte ernten' },
-    { name: 'Jungfrau',    emoji: '♍', el: 'Erde',   hint: 'Ordnung · Heilpflanzen, Kräuter ernten' },
-    { name: 'Waage',       emoji: '♎', el: 'Luft',   hint: 'Ausgleich · Blumen pflanzen, Harmonie' },
-    { name: 'Skorpion',    emoji: '♏', el: 'Wasser', hint: 'Tiefe · Entgiftung, Fasten beginnen' },
-    { name: 'Schütze',     emoji: '♐', el: 'Feuer',  hint: 'Expansion · Reisen, Neues wagen' },
-    { name: 'Steinbock',   emoji: '♑', el: 'Erde',   hint: 'Struktur · Knochen stärken, Zähne' },
-    { name: 'Wassermann',  emoji: '♒', el: 'Luft',   hint: 'Innovation · Kreativität, neue Ideen' },
-    { name: 'Fische',      emoji: '♓', el: 'Wasser', hint: 'Intuition · Ruhe, meditieren, schlafen' },
+    { name: 'Widder',     emoji: '♈', el: 'Feuer',  moonHint: '🌱 Haare schneiden (Wachstum) · Rasenmähen · Zwiebeln pflanzen',       sunHint: 'Mut, Tatendrang, Pioniergeist' },
+    { name: 'Stier',      emoji: '♉', el: 'Erde',   moonHint: '🥕 Wurzelgemüse säen & ernten · Kartoffeln · Bäume pflanzen',           sunHint: 'Beständigkeit, Genuss, Verlässlichkeit' },
+    { name: 'Zwillinge',  emoji: '♊', el: 'Luft',   moonHint: '🚫 Ungünstig zum Pflanzen · Garten aufräumen · Kompost wenden',         sunHint: 'Neugier, Kommunikation, Vielseitigkeit' },
+    { name: 'Krebs',      emoji: '♋', el: 'Wasser', moonHint: '🥬 Blattpflanzen gießen & ernten · Salat · Kräuter pikieren',          sunHint: 'Fürsorge, Intuition, Heimatliebe' },
+    { name: 'Löwe',       emoji: '♌', el: 'Feuer',  moonHint: '🍎 Obst & Früchte ernten · Marmelade kochen · Weinlese vorbereiten',   sunHint: 'Ausstrahlung, Großzügigkeit, Kreativität' },
+    { name: 'Jungfrau',   emoji: '♍', el: 'Erde',   moonHint: '🌿 Heilkräuter ernten · Gemüse konservieren · Beete jäten',            sunHint: 'Präzision, Hilfsbereitschaft, Analyse' },
+    { name: 'Waage',      emoji: '♎', el: 'Luft',   moonHint: '🌸 Blumen pflanzen & schneiden · Ziergehölze · Rasen düngen',          sunHint: 'Harmonie, Gerechtigkeit, Schönheitssinn' },
+    { name: 'Skorpion',   emoji: '♏', el: 'Wasser', moonHint: '🍄 Pilze suchen · Entgiftung, Fasten · Schädlinge bekämpfen',          sunHint: 'Tiefe, Leidenschaft, Wandel' },
+    { name: 'Schütze',    emoji: '♐', el: 'Feuer',  moonHint: '🍎 Früchte & Samen ernten · Bäume schneiden · Holz schlagen',          sunHint: 'Freiheitsdrang, Optimismus, Weitsicht' },
+    { name: 'Steinbock',  emoji: '♑', el: 'Erde',   moonHint: '🥔 Wintergemüse ernten · Wurzeln lagern · Boden vorbereiten',          sunHint: 'Ausdauer, Disziplin, Verantwortung' },
+    { name: 'Wassermann', emoji: '♒', el: 'Luft',   moonHint: '🚫 Ungünstig zum Pflanzen · Geräte pflegen · Garten planen',           sunHint: 'Originalität, Unabhängigkeit, Menschlichkeit' },
+    { name: 'Fische',     emoji: '♓', el: 'Wasser', moonHint: '🥬 Blattpflanzen & Sprossen · Blumen gießen · Kresse säen',            sunHint: 'Einfühlsamkeit, Phantasie, Mitgefühl' },
 ];
 
 const ELEMENT_COLOR = { 'Feuer': '#f97316', 'Erde': '#84cc16', 'Luft': '#38bdf8', 'Wasser': '#818cf8' };
@@ -1062,6 +1062,11 @@ function renderMoon() {
                     </div>
                 </div>
             </div>
+            <div class="section-divider"><span>Mondkalender ${MONTHS_DE[month]} ${year}</span></div>
+            <div class="moon-calendar-card">
+                <div class="moon-cal-title"></div>
+                ${calHtml}
+            </div>
             <div class="section-divider"><span>Sternzeichen heute</span></div>
             <div class="zodiac-card">
                 <div class="zodiac-row">
@@ -1069,21 +1074,16 @@ function renderMoon() {
                         <div class="zodiac-label">🌙 Mondzeichen</div>
                         <div class="zodiac-sign">${moonSign.emoji} ${moonSign.name}</div>
                         <div class="zodiac-element" style="color:${ELEMENT_COLOR[moonSign.el]}">${moonSign.el}zeichen</div>
-                        <div class="zodiac-hint">${moonSign.hint}</div>
+                        <div class="zodiac-hint">${moonSign.moonHint}</div>
                     </div>
                     <div class="zodiac-divider"></div>
                     <div class="zodiac-item">
                         <div class="zodiac-label">☀️ Sonnenzeichen</div>
                         <div class="zodiac-sign">${sunSign.emoji} ${sunSign.name}</div>
                         <div class="zodiac-element" style="color:${ELEMENT_COLOR[sunSign.el]}">${sunSign.el}zeichen</div>
-                        <div class="zodiac-hint">${sunSign.hint}</div>
+                        <div class="zodiac-hint">${sunSign.sunHint}</div>
                     </div>
                 </div>
-            </div>
-            <div class="section-divider"><span>Mondkalender ${MONTHS_DE[month]} ${year}</span></div>
-            <div class="moon-calendar-card">
-                <div class="moon-cal-title"></div>
-                ${calHtml}
             </div>
         </div>
     `;
