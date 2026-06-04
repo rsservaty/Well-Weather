@@ -1466,6 +1466,9 @@ function renderBio(data, airData) {
     );
     const ozone = airData ? ((airData.current || {}).ozone ?? 0) : 0;
 
+    // Taupunkt (zentral für alle Schwüle-Berechnungen)
+    const dewPt = (temp != null && humidity != null) ? temp - (100 - humidity) / 5 : null;
+
     // Sonderbedingungen
     const hasThunder = wcode >= 95;
     const isFoehn    = tChange > 5 && humidity != null && humidity < 40 && wind > 20;
@@ -1480,11 +1483,8 @@ function renderBio(data, airData) {
     else if (pressureDiff < -3) kreislauf += 1;
     if (Math.abs(tChange) > 8)  kreislauf += 1;
     // Schwüle (Taupunkt) belastet Kreislauf
-    if (temp != null && humidity != null) {
-        const _td = temp - (100 - humidity) / 5;
-        if (_td >= 21)      kreislauf += 2;
-        else if (_td >= 16) kreislauf += 1;
-    }
+    if (dewPt != null && dewPt >= 21)      kreislauf += 2;
+    else if (dewPt != null && dewPt >= 16) kreislauf += 1;
 
     // Migräne / Kopf
     let migraene = 0;
@@ -1519,7 +1519,8 @@ function renderBio(data, airData) {
     else if (pressureDiff < -3)  muedigkeit += 1;
     const cloudCover = (hourly.cloud_cover || [])[hIdx] ?? null;
     if (cloudCover != null && cloudCover > 80) muedigkeit += 1;
-    if (temp != null && humidity != null && temp > 24 && humidity > 70) muedigkeit += 1;
+    if (dewPt != null && dewPt >= 21)      muedigkeit += 2;
+    else if (dewPt != null && dewPt >= 16) muedigkeit += 1;
 
     // Outdoor Sport
     let sport = 0;
@@ -1529,7 +1530,8 @@ function renderBio(data, airData) {
     if (wind > 50)                                           sport += 2;
     else if (wind > 30)                                      sport += 1;
     if (precip > 0.5)                                        sport += 1;
-    if (humidity != null && humidity > 85)                   sport += 1;
+    if (dewPt != null && dewPt >= 21)      sport += 2;
+    else if (dewPt != null && dewPt >= 16) sport += 1;
     if (cur.uv_index != null && cur.uv_index > 8)           sport += 1;
 
     // ---- AMPEL ----
@@ -1634,11 +1636,8 @@ function renderBio(data, airData) {
 
     // Hinweis-Texte
     function kreislaufHint() {
-        if (temp != null && humidity != null) {
-            const _td = temp - (100 - humidity) / 5;
-            if (_td >= 21) return 'Sehr schwüle Luft — Kreislauf stark belastet, viel trinken.';
-            if (_td >= 16) return 'Feuchte Luft erhöht die Kreislaufbelastung.';
-        }
+        if (dewPt != null && dewPt >= 21) return 'Sehr schwüle Luft — Kreislauf stark belastet, viel trinken.';
+        if (dewPt != null && dewPt >= 16) return 'Feuchte Luft erhöht die Kreislaufbelastung.';
         if (pressureDiff < -8) return 'Starker Druckabfall — Kreislauf kann belastet sein.';
         if (pressureDiff < -3) return 'Leichter Druckabfall spürbar.';
         if (Math.abs(tChange) > 8) return 'Großer Temperatursprung morgen.';
@@ -1667,14 +1666,16 @@ function renderBio(data, airData) {
     function muedigkeitHint() {
         if (pressureDiff < -6) return 'Deutlicher Druckabfall — Antriebslosigkeit und Müdigkeit wahrscheinlich.';
         if (pressureDiff < -3) return 'Leichter Druckabfall — kann die Tagesvitalität dämpfen.';
-        if (temp != null && humidity != null && temp > 24 && humidity > 70) return 'Schwüle Luft — der Körper arbeitet mehr, das kostet Energie.';
+        if (dewPt != null && dewPt >= 21) return 'Sehr schwüle Luft — Körper muss Wärme stark regulieren, Energie sinkt.';
+        if (dewPt != null && dewPt >= 16) return 'Feuchte Luft — Wärmeabgabe erschwert, kann müde machen.';
         if (cloudCover != null && cloudCover > 80) return 'Trübes Licht mindert die Serotoninproduktion — etwas mehr Müdigkeit möglich.';
         return 'Gute Voraussetzungen für einen wachen, energiereichen Tag.';
     }
     function schlafHint() {
         if (tSwing > 12) return 'Große Temperaturschwankung heute — Schlaf kann unruhig sein.';
         if (tSwing > 8) return 'Spürbare Temperaturdifferenz zwischen Tag und Nacht.';
-        if (humidity != null && humidity > 80) return 'Schwüle Luft kann den Schlaf beeinträchtigen.';
+        if (dewPt != null && dewPt >= 21) return 'Sehr schwüle Nacht — Schlaf stark beeinträchtigt.';
+        if (dewPt != null && dewPt >= 16) return 'Feuchte Luft kann den Schlaf beeinträchtigen.';
         if (pressureDiff < -3) return 'Wetterwechsel — kann den Schlaf leicht stören.';
         return 'Gute Schlafbedingungen erwartet.';
     }
@@ -1685,7 +1686,8 @@ function renderBio(data, airData) {
         if (temp != null && temp < 2) return 'Zu kalt — Verletzungsgefahr durch gefrorenen Boden.';
         if (wind > 50) return 'Sehr starker Wind — draußen Sport gefährlich.';
         if (precip > 0.5) return 'Niederschlag — Sport nur mit entsprechender Ausrüstung.';
-        if (humidity != null && humidity > 85) return 'Sehr schwül — körperliche Belastung erhöht.';
+        if (dewPt != null && dewPt >= 21) return 'Sehr schwüle Luft — körperliche Belastung stark erhöht, viel trinken.';
+        if (dewPt != null && dewPt >= 16) return 'Feuchte Luft erhöht die Belastung beim Sport.';
         if (cur.uv_index != null && cur.uv_index > 8) return 'Sehr hoher UV-Index — nur mit Sonnenschutz und in kühlen Stunden.';
         if (wind > 30) return 'Kräftiger Wind — leicht eingeschränkt, aber möglich.';
         if (temp != null && (temp < 8 || temp > 30)) return 'Temperatur am Grenzbereich — angepasste Kleidung empfohlen.';
