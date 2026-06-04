@@ -190,6 +190,7 @@ function initMap() {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>',
         maxZoom: 19,
     }).addTo(map);
+    L.control.scale({ imperial: false, position: 'bottomleft' }).addTo(map);
 
     // Klick-Handler
     map.on('click', (e) => {
