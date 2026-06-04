@@ -151,6 +151,7 @@ const els = {
     windSpeed:     document.getElementById('windSpeed'),
     humidity:      document.getElementById('humidity'),
     tempTrend:     document.getElementById('tempTrend'),
+    localTimeBadge: document.getElementById('localTimeBadge'),
     forecastGrid:  document.getElementById('forecastGrid'),
     searchInput:   document.getElementById('searchInput'),
     searchBtn:     document.getElementById('searchBtn'),
@@ -418,6 +419,16 @@ function renderWeather(data, cityName, lat, lon) {
         `;
         strip.appendChild(card);
     });
+
+    // Lokale Ortszeit
+    if (els.localTimeBadge) {
+        const utcOff = data.utc_offset_seconds || 0;
+        const locNow = new Date(Date.now() + utcOff * 1000);
+        const pad = n => String(n).padStart(2, '0');
+        const timeStr = pad(locNow.getUTCHours()) + ':' + pad(locNow.getUTCMinutes());
+        els.localTimeBadge.textContent = '🕐 ' + timeStr + ' Uhr';
+        els.localTimeBadge.style.display = '';
+    }
 
     // Wetter-Kachel dynamischer Hintergrund
     const currentWeatherEl = document.querySelector('.current-weather');
@@ -1045,16 +1056,24 @@ function renderUV(data) {
         </div>`;
     }
 
+    const infoMax = uvInfo(uvMax);
     document.getElementById('uvContent').innerHTML = `
         <div class="uv-wrapper">
             <div class="uv-card">
-                <div class="uv-value-row">
-                    <div class="uv-number" style="color:${info.color}">${uv != null ? uv.toFixed(1) : '—'}</div>
-                    <div>
+                <div class="uv-dual-row">
+                    <div class="uv-dual-item">
+                        <div class="uv-dual-label">Aktuell</div>
+                        <div class="uv-number" style="color:${info.color}">${uv != null ? uv.toFixed(1) : '—'}</div>
                         <div class="uv-category" style="color:${info.color}">${info.label}</div>
-                        <div class="uv-advice">${info.adv}</div>
+                    </div>
+                    <div class="uv-dual-divider"></div>
+                    <div class="uv-dual-item">
+                        <div class="uv-dual-label">Max. heute</div>
+                        <div class="uv-number" style="color:${infoMax.color}">${uvMax != null ? uvMax.toFixed(1) : '—'}</div>
+                        <div class="uv-category" style="color:${infoMax.color}">${infoMax.label}</div>
                     </div>
                 </div>
+                ${infoMax.adv ? `<div class="uv-advice-box">☀️ Heute: ${infoMax.adv}</div>` : ''}
                 <div class="uv-scale">
                     <div class="uv-scale-seg" style="background:#22c55e"></div>
                     <div class="uv-scale-seg" style="background:#eab308"></div>
