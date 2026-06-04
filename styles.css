@@ -512,6 +512,8 @@ body {
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
     padding-bottom: 0.25rem;
+    -webkit-mask-image: linear-gradient(to right, black 80%, transparent 100%);
+    mask-image: linear-gradient(to right, black 80%, transparent 100%);
 }
 .hourly-scroll::-webkit-scrollbar { display: none; }
 
@@ -526,20 +528,21 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.2rem;
+    gap: 0.25rem;
     background: var(--forecast-bg);
-    border-radius: var(--radius-sm);
-    padding: 0.5rem 0.6rem;
-    min-width: 52px;
+    border-radius: 10px;
+    padding: 0.6rem 0.65rem;
+    min-width: 56px;
     cursor: default;
-    border: 2px solid transparent;
-    transition: background 0.15s;
+    border: 1px solid var(--divider-color);
+    transition: background 0.15s, border-color 0.15s;
 }
 
-.hourly-card:hover { background: var(--forecast-hover); }
+.hourly-card:hover { background: var(--forecast-hover); border-color: var(--accent); }
 
 .hourly-card.current-hour {
-    border-color: var(--today-border);
+    border-color: var(--accent);
+    border-width: 2px;
     background: var(--today-bg);
 }
 
@@ -596,23 +599,25 @@ body {
 
 .forecast-card {
     background: var(--forecast-bg);
-    border-radius: var(--radius-sm);
-    padding: 0.75rem 1rem;
+    border-radius: 10px;
+    padding: 0.7rem 1rem;
     display: grid;
-    grid-template-columns: 80px 2rem 1fr auto;
+    grid-template-columns: 76px 2.2rem 1fr auto;
     align-items: center;
-    gap: 0.75rem;
+    gap: 0.65rem;
     cursor: default;
     transition: background 0.15s;
-    border: 2px solid transparent;
+    border: 1px solid var(--divider-color);
 }
 
 .forecast-card:hover {
     background: var(--forecast-hover);
+    border-color: var(--accent);
 }
 
 .forecast-card.today {
-    border-color: var(--today-border);
+    border-color: var(--accent);
+    border-width: 2px;
     background: var(--today-bg);
 }
 
@@ -1467,3 +1472,29 @@ body.panel-hidden .map-wrapper {
     color: var(--text-muted);
     display: block;
 }
+
+/* ---- Temperaturfarben (Stunden) ---- */
+.temp-cold     { color: #60a5fa; }
+.temp-cool     { color: #34d399; }
+.temp-mild     { color: #a3e635; }
+.temp-warm     { color: #fbbf24; }
+.temp-hot      { color: #fb923c; }
+.temp-very-hot { color: #f87171; }
+
+/* ---- Temperaturbalken (Tage) ---- */
+.temp-bar-track {
+    height: 4px;
+    border-radius: 2px;
+    background: var(--divider-color);
+    position: relative;
+    margin-top: 5px;
+    width: 100%;
+}
+.temp-bar-fill {
+    position: absolute;
+    height: 100%;
+    border-radius: 2px;
+    top: 0;
+    min-width: 6px;
+}
+
