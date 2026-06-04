@@ -1668,3 +1668,11 @@ body.panel-hidden .map-wrapper {
     line-height: 1.4;
 }
 
+.moon-garden-source {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    opacity: 0.6;
+    margin-top: 0.5rem;
+    font-style: italic;
+}
+
