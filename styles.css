@@ -1603,3 +1603,59 @@ body.panel-hidden .map-wrapper {
     margin-bottom: 0.75rem;
 }
 
+/* ---- Sternzeichen-Karte (Mond-Tab) ---- */
+.zodiac-card {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    padding: 1rem 1.25rem;
+    margin: 0 1rem;
+}
+
+.zodiac-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+.zodiac-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.zodiac-divider {
+    width: 1px;
+    min-height: 80px;
+    background: var(--divider-color);
+    flex-shrink: 0;
+    align-self: stretch;
+}
+
+.zodiac-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    margin-bottom: 0.15rem;
+}
+
+.zodiac-sign {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.zodiac-element {
+    font-size: 0.78rem;
+    font-weight: 600;
+}
+
+.zodiac-hint {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    line-height: 1.4;
+    margin-top: 0.15rem;
+}
+
