@@ -406,11 +406,24 @@ function renderWeather(data, cityName, lat, lon) {
         currentWeatherEl.insertAdjacentElement('afterend', hourlySection);
     }
 
+    // Schwüle für Wetter-Tab berechnen
+    const _wTemp = cur.temperature_2m ?? null;
+    const _wHum  = cur.relative_humidity_2m ?? null;
+    let   _wSchwuele = '';
+    if (_wTemp != null && _wHum != null) {
+        const _wTd = _wTemp - (100 - _wHum) / 5;
+        if      (_wTd >= 24) _wSchwuele = '💧 Sehr schwül — Wärmeabgabe stark eingeschränkt';
+        else if (_wTd >= 21) _wSchwuele = '💧 Schwül — deutlich belastend';
+        else if (_wTd >= 18) _wSchwuele = '💧 Leicht schwül';
+        else if (_wTd >= 16) _wSchwuele = '💧 Leicht feucht';
+    }
+
     hourlySection.innerHTML = `
         <div class="section-divider"><span>Nächste 24 Stunden</span></div>
         <div class="hourly-scroll">
             <div class="hourly-strip" id="hourlyStrip"></div>
         </div>
+        ${_wSchwuele ? `<div class="schwuele-hint">${_wSchwuele}</div>` : ''}
     `;
 
     const strip = document.getElementById('hourlyStrip');
@@ -875,17 +888,19 @@ function renderAir(data, pressure, temp, humidity) {
         </div>`;
     }).join('');
 
-    // Schwüle berechnen
+    // Schwüle berechnen (Taupunkt: Td ≈ T - (100 - RH) / 5)
     let schwueleLabel = '—';
     let schwueleColor = 'var(--text-muted)';
     let schwueleDesc  = '';
+    let dewPoint      = null;
     if (temp != null && humidity != null) {
-        const isDampf = temp > 16 && humidity > 60;
-        if (temp >= 28 && humidity >= 80)      { schwueleLabel = 'Sehr schwül';  schwueleColor = '#ef4444'; schwueleDesc = 'Körper kann Wärme kaum abgeben'; }
-        else if (temp >= 24 && humidity >= 70) { schwueleLabel = 'Schwül';       schwueleColor = '#f97316'; schwueleDesc = 'Deutlich belastend, viel trinken'; }
-        else if (temp >= 20 && humidity >= 65) { schwueleLabel = 'Leicht schwül';schwueleColor = '#eab308'; schwueleDesc = 'Leicht drückend, besonders bei Anstrengung'; }
-        else if (isDampf)                      { schwueleLabel = 'Angenehm';     schwueleColor = '#22c55e'; schwueleDesc = 'Luft fühlt sich frisch an'; }
-        else                                   { schwueleLabel = 'Trocken';      schwueleColor = '#22c55e'; schwueleDesc = 'Luft ist trocken und leicht'; }
+        dewPoint = temp - (100 - humidity) / 5;
+        if (dewPoint >= 24)      { schwueleLabel = 'Sehr schwül';   schwueleColor = '#ef4444'; schwueleDesc = 'Körper kann Wärme kaum abgeben'; }
+        else if (dewPoint >= 21) { schwueleLabel = 'Schwül';        schwueleColor = '#f97316'; schwueleDesc = 'Deutlich belastend, viel trinken'; }
+        else if (dewPoint >= 18) { schwueleLabel = 'Leicht schwül'; schwueleColor = '#eab308'; schwueleDesc = 'Leicht drückend, besonders bei Anstrengung'; }
+        else if (dewPoint >= 16) { schwueleLabel = 'Leicht feucht'; schwueleColor = '#a3e635'; schwueleDesc = 'Spürbar feuchte Luft'; }
+        else if (dewPoint >= 10) { schwueleLabel = 'Angenehm';      schwueleColor = '#22c55e'; schwueleDesc = 'Luft fühlt sich frisch an'; }
+        else                     { schwueleLabel = 'Trocken';       schwueleColor = '#22c55e'; schwueleDesc = 'Luft ist trocken und leicht'; }
     }
 
     document.getElementById('luftContent').innerHTML = `
@@ -907,19 +922,22 @@ function renderAir(data, pressure, temp, humidity) {
                     <div class="pollutant-item"><div class="pollutant-name">NO₂</div><div class="pollutant-value">${cur.nitrogen_dioxide != null ? cur.nitrogen_dioxide.toFixed(1) : '—'} µg/m³</div></div>
                 </div>
             </div>
-            <div class="pressure-card">
-                <div class="pressure-header">
-                    <span class="pressure-label">🌡️ Luftdruck</span>
-                    <span class="pressure-value">${pressure != null ? pressure.toFixed(0) + ' hPa' : '—'}</span>
+            <div class="luft-conditions-row">
+                <div class="luft-cond-item">
+                    <span class="luft-cond-label">🌡️ Luftdruck</span>
+                    <span class="luft-cond-value">${pressure != null ? pressure.toFixed(0) + ' hPa' : '—'}</span>
+                    <span class="luft-cond-desc">${pressure != null ? (pressure < 1000 ? 'Tief' : pressure < 1013 ? 'Wechselhaft' : 'Hoch') : ''}</span>
                 </div>
-                <div class="pressure-desc">${pressure != null ? (pressure < 1000 ? 'Tief — wechselhaftes Wetter' : pressure < 1013 ? 'Wechselhaft' : 'Hoch — stabiles Wetter') : ''}</div>
-            </div>
-            <div class="schwuele-card">
-                <div class="pressure-header">
-                    <span class="pressure-label">💧 Schwüle</span>
-                    <span class="pressure-value" style="color:${schwueleColor}">${schwueleLabel}</span>
+                <div class="luft-cond-item">
+                    <span class="luft-cond-label">💧 Schwüle</span>
+                    <span class="luft-cond-value" style="color:${schwueleColor}">${schwueleLabel}</span>
+                    <span class="luft-cond-desc">${schwueleDesc}</span>
                 </div>
-                <div class="pressure-desc">${schwueleDesc}</div>
+                <div class="luft-cond-item">
+                    <span class="luft-cond-label">💦 Luftfeuchte</span>
+                    <span class="luft-cond-value">${humidity != null ? humidity + ' %' : '—'}</span>
+                    <span class="luft-cond-desc">${humidity != null ? (humidity < 30 ? 'Sehr trocken' : humidity < 50 ? 'Trocken' : humidity < 70 ? 'Angenehm' : humidity < 85 ? 'Feucht' : 'Sehr feucht') : ''}</span>
+                </div>
             </div>
             <div class="section-divider"><span>Pollenflug heute</span></div>
             <div class="pollen-card">
@@ -1461,6 +1479,12 @@ function renderBio(data, airData) {
     if (pressureDiff < -8)      kreislauf += 2;
     else if (pressureDiff < -3) kreislauf += 1;
     if (Math.abs(tChange) > 8)  kreislauf += 1;
+    // Schwüle (Taupunkt) belastet Kreislauf
+    if (temp != null && humidity != null) {
+        const _td = temp - (100 - humidity) / 5;
+        if (_td >= 21)      kreislauf += 2;
+        else if (_td >= 16) kreislauf += 1;
+    }
 
     // Migräne / Kopf
     let migraene = 0;
@@ -1610,6 +1634,11 @@ function renderBio(data, airData) {
 
     // Hinweis-Texte
     function kreislaufHint() {
+        if (temp != null && humidity != null) {
+            const _td = temp - (100 - humidity) / 5;
+            if (_td >= 21) return 'Sehr schwüle Luft — Kreislauf stark belastet, viel trinken.';
+            if (_td >= 16) return 'Feuchte Luft erhöht die Kreislaufbelastung.';
+        }
         if (pressureDiff < -8) return 'Starker Druckabfall — Kreislauf kann belastet sein.';
         if (pressureDiff < -3) return 'Leichter Druckabfall spürbar.';
         if (Math.abs(tChange) > 8) return 'Großer Temperatursprung morgen.';
