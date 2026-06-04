@@ -51,6 +51,45 @@ const WMO = {
     99: { label: 'Gewitter mit starkem Hagel',  icon: '⛈️' },
 };
 
+function weatherCardStyle(code, isDay) {
+    const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    let cat;
+    if      (code === 0 || code === 1)                       cat = isDay ? 'sunny' : 'clear-night';
+    else if (code === 2)                                     cat = 'partly-cloudy';
+    else if (code === 3)                                     cat = 'overcast';
+    else if (code === 45 || code === 48)                     cat = 'fog';
+    else if (code >= 51 && code <= 67)                       cat = 'rain';
+    else if ((code >= 71 && code <= 77) || code === 85 || code === 86) cat = 'snow';
+    else if (code === 80 || code === 81)                     cat = 'rain';
+    else if (code === 82)                                    cat = 'heavy-rain';
+    else if (code >= 95)                                     cat = 'storm';
+    else                                                     cat = 'partly-cloudy';
+
+    const dark = {
+        'sunny':         'linear-gradient(150deg, #0f2a48 0%, #1a3a5c 55%, #1e3d20 100%)',
+        'clear-night':   'linear-gradient(150deg, #0a1228 0%, #101c42 55%, #0d1535 100%)',
+        'partly-cloudy': 'linear-gradient(150deg, #1a2f4a 0%, #22354f 55%, #1e2d42 100%)',
+        'overcast':      'linear-gradient(150deg, #1e2535 0%, #252d40 55%, #2a3245 100%)',
+        'fog':           'linear-gradient(150deg, #222b3c 0%, #2d3848 55%, #343f52 100%)',
+        'rain':          'linear-gradient(150deg, #0e1c2e 0%, #152438 55%, #1a2d40 100%)',
+        'heavy-rain':    'linear-gradient(150deg, #0a1520 0%, #101e2e 55%, #152535 100%)',
+        'snow':          'linear-gradient(150deg, #182438 0%, #223250 55%, #263d5a 100%)',
+        'storm':         'linear-gradient(150deg, #0a0c1e 0%, #130f28 55%, #1a1535 100%)',
+    };
+    const light = {
+        'sunny':         'linear-gradient(150deg, #fffde7 0%, #e3f2fd 55%, #fff8e1 100%)',
+        'clear-night':   'linear-gradient(150deg, #e8eaf6 0%, #c5cae9 55%, #9fa8da 100%)',
+        'partly-cloudy': 'linear-gradient(150deg, #e3f2fd 0%, #eceff1 55%, #e1f5fe 100%)',
+        'overcast':      'linear-gradient(150deg, #eceff1 0%, #cfd8dc 55%, #b0bec5 100%)',
+        'fog':           'linear-gradient(150deg, #f5f5f5 0%, #e0e0e0 55%, #d6d6d6 100%)',
+        'rain':          'linear-gradient(150deg, #e3f2fd 0%, #bbdefb 55%, #90caf9 100%)',
+        'heavy-rain':    'linear-gradient(150deg, #e8eaf6 0%, #c5cae9 55%, #9fa8da 100%)',
+        'snow':          'linear-gradient(150deg, #e3f2fd 0%, #f1f8fe 55%, #e8f5e9 100%)',
+        'storm':         'linear-gradient(150deg, #ede7f6 0%, #d1c4e9 55%, #b39ddb 100%)',
+    };
+    return (isDark ? dark : light)[cat] || (isDark ? dark : light)['overcast'];
+}
+
 function getWMO(code) {
     return WMO[code] || { label: 'Unbekannt', icon: '🌡️' };
 }
@@ -330,6 +369,12 @@ function renderWeather(data, cityName, lat, lon) {
         `;
         strip.appendChild(card);
     });
+
+    // Wetter-Kachel dynamischer Hintergrund
+    const currentWeatherEl = document.querySelector('.current-weather');
+    if (currentWeatherEl) {
+        currentWeatherEl.style.background = weatherCardStyle(cur.weather_code, cur.is_day === 1);
+    }
 
     // Marker aktualisieren
     setMarker(lat, lon, cityName);
