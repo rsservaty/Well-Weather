@@ -1090,7 +1090,7 @@ function renderMoon() {
                 <div class="moon-cal-title"></div>
                 ${calHtml}
             </div>
-            <div class="section-divider"><span>🌱 Mondkalender</span></div>
+            <div class="section-divider"><span>🌱 Gartenkalender</span></div>
             <div class="zodiac-card">
                 <div class="moon-garden-header">
                     <span class="moon-garden-day" style="color:${ELEMENT_COLOR[moonSign.el]}">${moonSign.el}tag</span>
