@@ -1371,16 +1371,69 @@ body.panel-hidden .map-wrapper {
 }
 
 /* ---- Warn-Badges ---- */
+.warn-count {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    padding: 0 0 0.4rem 0.25rem;
+}
+
+.warning-title-block {
+    flex: 1;
+    min-width: 0;
+}
+
+.warning-badges {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin-top: 0.25rem;
+    flex-wrap: wrap;
+}
+
 .warn-badge {
     font-size: 0.7rem;
     font-weight: 700;
     padding: 2px 7px;
     border-radius: 10px;
-    margin-left: auto;
     white-space: nowrap;
 }
 .warn-active { background: #ef4444; color: #fff; }
 .warn-soon   { background: #f97316; color: #fff; }
+
+.warn-stufe {
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 10px;
+    white-space: nowrap;
+}
+.warn-stufe-1 { background: #fde047; color: #713f12; }
+.warn-stufe-2 { background: #fb923c; color: #fff; }
+.warn-stufe-3 { background: #ef4444; color: #fff; }
+.warn-stufe-4 { background: #a855f7; color: #fff; }
+
+.warning-instruction {
+    font-size: 0.78rem;
+    opacity: 0.9;
+    margin: 0.35rem 0;
+    line-height: 1.45;
+    font-style: italic;
+}
+
+.warn-expand-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: inherit;
+    opacity: 0.7;
+    padding: 0;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+.warn-expand-btn:hover { opacity: 1; }
 
 /* ---- Bio 24h Vorschau ---- */
 .bio-arrow {
