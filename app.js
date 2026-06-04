@@ -1100,6 +1100,7 @@ function renderMoon() {
                     ${moonSign.tips.map(t => `<li>${t}</li>`).join('')}
                 </ul>
                 <div class="moon-garden-avoid">⚠️ ${moonSign.avoid}</div>
+                <div class="moon-garden-source">Anbaumethode nach Maria Thun</div>
             </div>
         </div>
     `;
