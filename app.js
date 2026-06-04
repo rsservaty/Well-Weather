@@ -150,6 +150,7 @@ const els = {
     precipitation: document.getElementById('precipitation'),
     windSpeed:     document.getElementById('windSpeed'),
     humidity:      document.getElementById('humidity'),
+    tempTrend:     document.getElementById('tempTrend'),
     forecastGrid:  document.getElementById('forecastGrid'),
     searchInput:   document.getElementById('searchInput'),
     searchBtn:     document.getElementById('searchBtn'),
@@ -328,6 +329,35 @@ function renderWeather(data, cityName, lat, lon) {
     // Aktuell
     els.currentIcon.textContent    = wmo.icon;
     els.currentTemp.textContent    = `${Math.round(cur.temperature_2m)}°C`;
+
+    // Temperaturtrend: Vergleich aktuell vs. in 3 Stunden
+    if (els.tempTrend) {
+        const hourly = data.hourly;
+        const _tNow = new Date();
+        const _tPad = n => String(n).padStart(2, '0');
+        const nowH = `${_tNow.getFullYear()}-${_tPad(_tNow.getMonth()+1)}-${_tPad(_tNow.getDate())}T${_tPad(_tNow.getHours())}`;
+        const nowIdx = (hourly.time || []).findIndex(t => t.startsWith(nowH));
+        if (nowIdx >= 0 && nowIdx + 3 < (hourly.temperature_2m || []).length) {
+            const tCur   = hourly.temperature_2m[nowIdx];
+            const tFut   = hourly.temperature_2m[nowIdx + 3];
+            const diff   = tFut - tCur;
+            if (diff > 1.5) {
+                els.tempTrend.textContent  = '↑';
+                els.tempTrend.className    = 'temp-trend trend-up';
+                els.tempTrend.title        = `+${diff.toFixed(1)}°C in 3h`;
+            } else if (diff < -1.5) {
+                els.tempTrend.textContent  = '↓';
+                els.tempTrend.className    = 'temp-trend trend-down';
+                els.tempTrend.title        = `${diff.toFixed(1)}°C in 3h`;
+            } else {
+                els.tempTrend.textContent  = '→';
+                els.tempTrend.className    = 'temp-trend trend-stable';
+                els.tempTrend.title        = 'Temperatur bleibt stabil';
+            }
+        } else {
+            els.tempTrend.textContent = '';
+        }
+    }
     els.currentDesc.textContent    = wmo.label;
     els.feelsLike.textContent      = `${Math.round(cur.apparent_temperature)}°C`;
     els.precipitation.textContent  = cur.precipitation != null ? `${cur.precipitation} mm` : '—';
@@ -1515,3 +1545,70 @@ if ('serviceWorker' in navigator) {
             .catch(err => console.warn('SW Fehler:', err));
     });
 }
+
+// =====================================================
+// PULL-TO-REFRESH
+// =====================================================
+(function initPullToRefresh() {
+    const panel = document.getElementById('panel');
+    if (!panel) return;
+
+    const indicator = document.getElementById('pullIndicator');
+    const THRESHOLD = 72;
+    let startY = 0;
+    let pulling = false;
+    let active  = false;
+
+    panel.addEventListener('touchstart', e => {
+        if (panel.scrollTop > 0) return;
+        startY  = e.touches[0].clientY;
+        pulling = true;
+    }, { passive: true });
+
+    panel.addEventListener('touchmove', e => {
+        if (!pulling || !indicator) return;
+        const dy = e.touches[0].clientY - startY;
+        if (dy <= 0) return;
+
+        const progress = Math.min(dy / THRESHOLD, 1);
+        const translate = Math.min(dy * 0.45, THRESHOLD * 0.6);
+
+        indicator.style.transform  = `translateY(${translate}px)`;
+        indicator.style.opacity    = String(progress);
+        indicator.querySelector('.pull-icon').style.transform =
+            `rotate(${progress * 180}deg)`;
+        indicator.querySelector('.pull-label').textContent =
+            progress >= 1 ? 'Loslassen zum Aktualisieren' : 'Zum Aktualisieren ziehen';
+    }, { passive: true });
+
+    panel.addEventListener('touchend', e => {
+        if (!pulling || !indicator) return;
+        pulling = false;
+        const dy = e.changedTouches[0].clientY - startY;
+
+        if (dy >= THRESHOLD && lastLat !== null) {
+            active = true;
+            indicator.querySelector('.pull-label').textContent = 'Aktualisiert …';
+            indicator.querySelector('.pull-icon').textContent  = '↻';
+            indicator.querySelector('.pull-icon').style.animation = 'ptr-spin 0.8s linear infinite';
+            loadWeatherForCoords(lastLat, lastLon).finally(() => {
+                active = false;
+                resetIndicator();
+            });
+        } else {
+            resetIndicator();
+        }
+    }, { passive: true });
+
+    function resetIndicator() {
+        if (!indicator) return;
+        indicator.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
+        indicator.style.transform  = 'translateY(0)';
+        indicator.style.opacity    = '0';
+        indicator.querySelector('.pull-icon').style.transform  = 'rotate(0deg)';
+        indicator.querySelector('.pull-icon').style.animation  = '';
+        indicator.querySelector('.pull-label').textContent = 'Zum Aktualisieren ziehen';
+        setTimeout(() => { if (indicator) indicator.style.transition = ''; }, 350);
+    }
+})();
+
