@@ -1104,7 +1104,7 @@ function renderMoon() {
                     </div>
                 </div>
             </div>
-            <div class="section-divider"><span>Mondkalender ${MONTHS_DE[month]} ${year}</span></div>
+            <div class="section-divider section-divider--large"><span>🌙 Mondkalender ${MONTHS_DE[month]} ${year}</span></div>
             <div class="moon-calendar-card">
                 <div class="moon-cal-title"></div>
                 ${calHtml}
@@ -1272,8 +1272,10 @@ function renderWarnings(data) {
 
     if (!relevant.length) {
         container.innerHTML = '';
+        container.classList.remove('has-warnings');
         return;
     }
+    container.classList.add('has-warnings');
 
     function eventIcon(event) {
         const e = (event || '').toLowerCase();
