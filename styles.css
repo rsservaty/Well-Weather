@@ -582,6 +582,14 @@ body {
     letter-spacing: 0.06em;
 }
 
+
+.section-divider--large {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    letter-spacing: 0.03em;
+}
+
 .section-divider::before,
 .section-divider::after {
     content: '';
