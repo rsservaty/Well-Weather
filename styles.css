@@ -1303,7 +1303,7 @@ body.panel-hidden .map-wrapper {
 }
 
 /* ---- Luftdruck-Karte ---- */
-.pressure-card {
+.pressure-card, .schwuele-card {
     background: var(--card-bg);
     border-radius: 12px;
     padding: 14px 16px;
