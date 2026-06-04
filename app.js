@@ -996,7 +996,7 @@ function renderWarnings(data) {
         const onset   = a.onset   ? new Date(a.onset).getTime()   : 0;
         const expires = a.expires ? new Date(a.expires).getTime() : Infinity;
         return onset <= in12h && expires >= now;
-    }).sort((a, b) => new Date(a.onset) - new Date(b.onset));
+    }).sort((a, b) => (b.severity_level || 0) - (a.severity_level || 0) || new Date(a.onset) - new Date(b.onset));
 
     if (!relevant.length) {
         container.innerHTML = '';
@@ -1008,54 +1008,117 @@ function renderWarnings(data) {
         if (e.includes('flood') || e.includes('hochwasser')) return '🌊';
         if (e.includes('thunder') || e.includes('gewitter'))  return '⛈️';
         if (e.includes('snow') || e.includes('schnee'))       return '🌨️';
-        if (e.includes('wind') || e.includes('sturm'))        return '💨';
+        if (e.includes('wind') || e.includes('sturm') || e.includes('bö') || e.includes('boe')) return '💨';
         if (e.includes('fog') || e.includes('nebel'))         return '🌫️';
-        if (e.includes('frost') || e.includes('ice'))         return '🧊';
+        if (e.includes('frost') || e.includes('ice') || e.includes('eis')) return '🧊';
         if (e.includes('heat') || e.includes('hitze'))        return '🌡️';
-        if (e.includes('rain') || e.includes('regen'))        return '🌧️';
+        if (e.includes('rain') || e.includes('regen') || e.includes('starkregen')) return '🌧️';
         return null;
     }
 
     function sevColor(sev, event) {
         const isFlood = (event || '').toLowerCase().includes('flood') || (event || '').toLowerCase().includes('hochwasser');
-        if (isFlood) return { bg: '#eff6ff', border: '#3b82f6', text: '#1e40af', icon: '🌊' };
+        if (isFlood) return { bg: '#eff6ff', border: '#3b82f6', text: '#1e40af', icon: '🌊', stufe: 3, label: 'Stufe 3' };
         switch ((sev || '').toLowerCase()) {
-            case 'minor':    return { bg: '#fefce8', border: '#eab308', text: '#854d0e', icon: '⚠️' };
-            case 'moderate': return { bg: '#fff7ed', border: '#f97316', text: '#9a3412', icon: '🟠' };
-            case 'severe':   return { bg: '#fef2f2', border: '#ef4444', text: '#991b1b', icon: '🔴' };
-            case 'extreme':  return { bg: '#faf5ff', border: '#a855f7', text: '#6b21a8', icon: '🚨' };
-            default:         return { bg: '#f0f9ff', border: '#38bdf8', text: '#075985', icon: 'ℹ️' };
+            case 'minor':    return { bg: '#fefce8', border: '#eab308', text: '#854d0e', icon: '⚠️',  stufe: 1, label: 'Stufe 1' };
+            case 'moderate': return { bg: '#fff7ed', border: '#f97316', text: '#9a3412', icon: '🟠', stufe: 2, label: 'Stufe 2' };
+            case 'severe':   return { bg: '#fef2f2', border: '#ef4444', text: '#991b1b', icon: '🔴', stufe: 3, label: 'Stufe 3' };
+            case 'extreme':  return { bg: '#faf5ff', border: '#a855f7', text: '#6b21a8', icon: '🚨', stufe: 4, label: 'Stufe 4' };
+            default:         return { bg: '#f0f9ff', border: '#38bdf8', text: '#075985', icon: 'ℹ️',  stufe: 0, label: '' };
         }
+    }
+
+    function warnTitle(a) {
+        // Bevorzuge deutschen Eventnamen, dann Headline, dann Englisch, dann Fallback
+        if (a.event_de) return a.event_de;
+        if (a.headline) {
+            // "Amtliche WARNUNG vor FROST" → "FROST" extrahieren
+            const m = a.headline.match(/vor\s+(.+)$/i);
+            if (m) return m[1].trim();
+            return a.headline;
+        }
+        if (a.event_en) return a.event_en;
+        if (a.event)    return a.event;
+        return 'Wetterwarnung';
     }
 
     const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
 
-    container.innerHTML = relevant.map(a => {
-        const c      = sevColor(a.severity, a.event);
-        const icon   = eventIcon(a.event) || c.icon;
-        const onset  = a.onset   ? new Date(a.onset).getTime()   : 0;
+    // Kopfzeile bei mehreren Warnungen
+    const countLine = relevant.length > 1
+        ? `<div class="warn-count">⚠️ ${relevant.length} aktive Warnungen</div>`
+        : '';
+
+    const cards = relevant.map((a, idx) => {
+        const c        = sevColor(a.severity, a.event_de || a.event);
+        const icon     = eventIcon(a.event_de || a.event_en || a.event) || c.icon;
+        const onset    = a.onset   ? new Date(a.onset).getTime() : 0;
         const isActive = onset <= now;
-        const badge  = isActive
+        const badge    = isActive
             ? `<span class="warn-badge warn-active">Aktiv</span>`
             : `<span class="warn-badge warn-soon">Bald</span>`;
+        const stufeBadge = c.label
+            ? `<span class="warn-stufe warn-stufe-${c.stufe}">${c.label}</span>`
+            : '';
         const onsetStr   = a.onset   ? new Date(a.onset).toLocaleString('de-DE',   {weekday:'short', day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'}) : '';
         const expiresStr = a.expires ? new Date(a.expires).toLocaleString('de-DE', {weekday:'short', day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'}) : '';
         const bg     = isDark ? 'rgba(0,0,0,0.3)' : c.bg;
         const border = c.border;
         const text   = isDark ? '#e2e8f0' : c.text;
+
+        // Beschreibung: kurz + ausklappbar
+        let descHtml = '';
+        if (a.description) {
+            const SHORT = 140;
+            if (a.description.length <= SHORT) {
+                descHtml = `<div class="warning-desc">${a.description}</div>`;
+            } else {
+                const short = a.description.slice(0, SHORT).trimEnd();
+                const rest  = a.description.slice(SHORT);
+                descHtml = `<div class="warning-desc" id="wdesc-${idx}">
+                    <span class="wdesc-short">${short}… <button class="warn-expand-btn" onclick="toggleWarnDesc(${idx})">mehr ▾</button></span>
+                    <span class="wdesc-full" style="display:none">${short}${rest} <button class="warn-expand-btn" onclick="toggleWarnDesc(${idx})">weniger ▴</button></span>
+                </div>`;
+            }
+        }
+
+        // Handlungsempfehlung
+        const instrHtml = a.instruction
+            ? `<div class="warning-instruction">💡 ${a.instruction}</div>`
+            : '';
+
         return `<div class="warning-card" style="background:${bg};border-left:4px solid ${border};color:${text}">
             <div class="warning-header">
                 <span class="warning-icon">${icon}</span>
-                <span class="warning-title">${a.headline || a.event || 'Wetterwarnung'}</span>
-                ${badge}
+                <div class="warning-title-block">
+                    <span class="warning-title">${warnTitle(a)}</span>
+                    <div class="warning-badges">
+                        ${stufeBadge}
+                        ${badge}
+                    </div>
+                </div>
             </div>
-            ${a.description ? `<div class="warning-desc">${a.description.slice(0, 200)}${a.description.length > 200 ? '…' : ''}</div>` : ''}
+            ${descHtml}
+            ${instrHtml}
             <div class="warning-time">
                 ${onsetStr ? `Von: ${onsetStr}` : ''}
                 ${expiresStr ? ` &nbsp;|&nbsp; Bis: ${expiresStr}` : ''}
             </div>
         </div>`;
     }).join('');
+
+    container.innerHTML = countLine + cards;
+}
+
+function toggleWarnDesc(idx) {
+    const el = document.getElementById(`wdesc-${idx}`);
+    if (!el) return;
+    const s = el.querySelector('.wdesc-short');
+    const f = el.querySelector('.wdesc-full');
+    if (!s || !f) return;
+    const isShort = s.style.display !== 'none';
+    s.style.display = isShort ? 'none' : '';
+    f.style.display = isShort ? '' : 'none';
 }
 
 
