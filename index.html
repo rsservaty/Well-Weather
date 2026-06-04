@@ -94,6 +94,10 @@
 
             <!-- ===== TAB: WETTER ===== -->
             <div class="tab-content active" id="tab-wetter">
+                <div id="pullIndicator" class="pull-indicator" aria-hidden="true">
+                    <span class="pull-icon">↓</span>
+                    <span class="pull-label">Zum Aktualisieren ziehen</span>
+                </div>
 
                 <!-- Wetter-Warnungen (dynamisch befüllt) -->
                 <div id="warningsContainer"></div>
@@ -130,7 +134,10 @@
                         <div class="current-main">
                             <span id="currentIcon" class="weather-icon-large"></span>
                             <div class="current-temp-block">
-                                <span id="currentTemp" class="current-temp">-</span>
+                                <div class="current-temp-row">
+                                    <span id="currentTemp" class="current-temp">-</span>
+                                    <span id="tempTrend" class="temp-trend"></span>
+                                </div>
                                 <span id="currentDesc" class="current-desc">-</span>
                             </div>
                         </div>
