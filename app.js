@@ -954,18 +954,42 @@ const MONTHS_DE = ['Januar','Februar','März','April','Mai','Juni','Juli','Augus
 // STERNZEICHEN — Mond & Sonne
 // =====================================================
 const ZODIAC = [
-    { name: 'Widder',     emoji: '♈', el: 'Feuer',  moonHint: '🌱 Haare schneiden (Wachstum) · Rasenmähen · Zwiebeln pflanzen',       sunHint: 'Mut, Tatendrang, Pioniergeist' },
-    { name: 'Stier',      emoji: '♉', el: 'Erde',   moonHint: '🥕 Wurzelgemüse säen & ernten · Kartoffeln · Bäume pflanzen',           sunHint: 'Beständigkeit, Genuss, Verlässlichkeit' },
-    { name: 'Zwillinge',  emoji: '♊', el: 'Luft',   moonHint: '🚫 Ungünstig zum Pflanzen · Garten aufräumen · Kompost wenden',         sunHint: 'Neugier, Kommunikation, Vielseitigkeit' },
-    { name: 'Krebs',      emoji: '♋', el: 'Wasser', moonHint: '🥬 Blattpflanzen gießen & ernten · Salat · Kräuter pikieren',          sunHint: 'Fürsorge, Intuition, Heimatliebe' },
-    { name: 'Löwe',       emoji: '♌', el: 'Feuer',  moonHint: '🍎 Obst & Früchte ernten · Marmelade kochen · Weinlese vorbereiten',   sunHint: 'Ausstrahlung, Großzügigkeit, Kreativität' },
-    { name: 'Jungfrau',   emoji: '♍', el: 'Erde',   moonHint: '🌿 Heilkräuter ernten · Gemüse konservieren · Beete jäten',            sunHint: 'Präzision, Hilfsbereitschaft, Analyse' },
-    { name: 'Waage',      emoji: '♎', el: 'Luft',   moonHint: '🌸 Blumen pflanzen & schneiden · Ziergehölze · Rasen düngen',          sunHint: 'Harmonie, Gerechtigkeit, Schönheitssinn' },
-    { name: 'Skorpion',   emoji: '♏', el: 'Wasser', moonHint: '🍄 Pilze suchen · Entgiftung, Fasten · Schädlinge bekämpfen',          sunHint: 'Tiefe, Leidenschaft, Wandel' },
-    { name: 'Schütze',    emoji: '♐', el: 'Feuer',  moonHint: '🍎 Früchte & Samen ernten · Bäume schneiden · Holz schlagen',          sunHint: 'Freiheitsdrang, Optimismus, Weitsicht' },
-    { name: 'Steinbock',  emoji: '♑', el: 'Erde',   moonHint: '🥔 Wintergemüse ernten · Wurzeln lagern · Boden vorbereiten',          sunHint: 'Ausdauer, Disziplin, Verantwortung' },
-    { name: 'Wassermann', emoji: '♒', el: 'Luft',   moonHint: '🚫 Ungünstig zum Pflanzen · Geräte pflegen · Garten planen',           sunHint: 'Originalität, Unabhängigkeit, Menschlichkeit' },
-    { name: 'Fische',     emoji: '♓', el: 'Wasser', moonHint: '🥬 Blattpflanzen & Sprossen · Blumen gießen · Kresse säen',            sunHint: 'Einfühlsamkeit, Phantasie, Mitgefühl' },
+    { name: 'Widder',     emoji: '♈', el: 'Feuer',
+      tips: ['Haare schneiden fördert kräftiges Nachwachsen', 'Zwiebeln, Knoblauch und Lauch pflanzen', 'Rasen mähen für dichten Wuchs', 'Unkraut jäten — wächst weniger nach'],
+      avoid: 'Wenig geeignet für Gießen und Blattpflanzen' },
+    { name: 'Stier',      emoji: '♉', el: 'Erde',
+      tips: ['Wurzelgemüse säen und ernten: Karotten, Rote Bete, Sellerie', 'Kartoffeln setzen oder ernten', 'Bäume und Sträucher pflanzen — gutes Anwachsen', 'Kompost einarbeiten und Beete mulchen'],
+      avoid: 'Wenig geeignet für Blumenpflege' },
+    { name: 'Zwillinge',  emoji: '♊', el: 'Luft',
+      tips: ['Gartenwerkzeuge reinigen und schärfen', 'Kompost umschichten und belüften', 'Gartenplanung und Bestellungen erledigen', 'Schädlingsbekämpfung (mechanisch)'],
+      avoid: 'Ungünstig für Säen, Pflanzen und Ernten' },
+    { name: 'Krebs',      emoji: '♋', el: 'Wasser',
+      tips: ['Blattpflanzen gießen — Wasser wird besonders gut aufgenommen', 'Salat, Spinat und Kohl säen oder pikieren', 'Kräuter wie Petersilie und Basilikum pflanzen', 'Zimmerpflanzen umtopfen und düngen'],
+      avoid: 'Wenig geeignet für Wurzelarbeiten und Ernten' },
+    { name: 'Löwe',       emoji: '♌', el: 'Feuer',
+      tips: ['Obst und Früchte ernten — beste Haltbarkeit und Geschmack', 'Marmelade und Konserven einkochen', 'Obstbäume schneiden und pflegen', 'Samen sammeln und trocknen'],
+      avoid: 'Wenig geeignet für Wurzelgemüse und Gießen' },
+    { name: 'Jungfrau',   emoji: '♍', el: 'Erde',
+      tips: ['Heilkräuter ernten — höchste Wirkstoffkonzentration', 'Gemüse für Vorrat einlagern und konservieren', 'Beete intensiv jäten und lockern', 'Düngen mit Kompost oder organischem Dünger'],
+      avoid: 'Wenig geeignet für Blumenpflanzungen' },
+    { name: 'Waage',      emoji: '♎', el: 'Luft',
+      tips: ['Blumen pflanzen und Blumensträuße schneiden', 'Ziergehölze und Hecken schneiden', 'Rasen düngen und pflegen', 'Kletterpflanzen und Rosen binden'],
+      avoid: 'Wenig geeignet für Gemüse säen' },
+    { name: 'Skorpion',   emoji: '♏', el: 'Wasser',
+      tips: ['Pilze suchen — ideale Bedingungen', 'Schädlinge und Unkraut effektiv bekämpfen', 'Beete zur Entgiftung und Bodenregeneration umgraben', 'Tiefwurzler wie Rote Bete und Pastinaken säen'],
+      avoid: 'Wenig geeignet für empfindliche Jungpflanzen' },
+    { name: 'Schütze',    emoji: '♐', el: 'Feuer',
+      tips: ['Früchte und Samen für die Aufbewahrung ernten', 'Bäume und Sträucher zurückschneiden', 'Holz schlagen — trocknet besonders gut', 'Nüsse und Äpfel für den Winter einlagern'],
+      avoid: 'Wenig geeignet für Blattpflanzen und Gießen' },
+    { name: 'Steinbock',  emoji: '♑', el: 'Erde',
+      tips: ['Wintergemüse wie Kohl und Rüben ernten', 'Wurzeln und Knollen für den Keller einlagern', 'Boden für die nächste Saison vorbereiten und kalken', 'Obstbäume und Beerensträucher schneiden'],
+      avoid: 'Wenig geeignet für Blumen und Blattpflanzen' },
+    { name: 'Wassermann', emoji: '♒', el: 'Luft',
+      tips: ['Gartengeräte warten, ölen und reparieren', 'Gartenpläne für die nächste Saison erstellen', 'Bestellungen für Saatgut aufgeben', 'Gewächshaus und Frühbeet reinigen'],
+      avoid: 'Ungünstig für Pflanzen, Säen und Ernten' },
+    { name: 'Fische',     emoji: '♓', el: 'Wasser',
+      tips: ['Blattpflanzen, Salat und Sprossen säen', 'Blumen und Wasserpflanzen pflegen', 'Kresse und Keimlinge ansetzen', 'Zimmerpflanzen intensiv gießen und besprühen'],
+      avoid: 'Wenig geeignet für Wurzelgemüse ernten' },
 ];
 
 const ELEMENT_COLOR = { 'Feuer': '#f97316', 'Erde': '#84cc16', 'Luft': '#38bdf8', 'Wasser': '#818cf8' };
@@ -1023,7 +1047,6 @@ function renderMoon() {
     const today    = new Date();
     const m        = moonPhaseData(today);
     const moonSign = moonZodiacSign(today);
-    const sunSign  = sunZodiacSign(today);
     const year  = today.getFullYear();
     const month = today.getMonth();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -1067,23 +1090,16 @@ function renderMoon() {
                 <div class="moon-cal-title"></div>
                 ${calHtml}
             </div>
-            <div class="section-divider"><span>Sternzeichen heute</span></div>
+            <div class="section-divider"><span>🌱 Mondkalender</span></div>
             <div class="zodiac-card">
-                <div class="zodiac-row">
-                    <div class="zodiac-item">
-                        <div class="zodiac-label">🌙 Mondzeichen</div>
-                        <div class="zodiac-sign">${moonSign.emoji} ${moonSign.name}</div>
-                        <div class="zodiac-element" style="color:${ELEMENT_COLOR[moonSign.el]}">${moonSign.el}zeichen</div>
-                        <div class="zodiac-hint">${moonSign.moonHint}</div>
-                    </div>
-                    <div class="zodiac-divider"></div>
-                    <div class="zodiac-item">
-                        <div class="zodiac-label">☀️ Sonnenzeichen</div>
-                        <div class="zodiac-sign">${sunSign.emoji} ${sunSign.name}</div>
-                        <div class="zodiac-element" style="color:${ELEMENT_COLOR[sunSign.el]}">${sunSign.el}zeichen</div>
-                        <div class="zodiac-hint">${sunSign.sunHint}</div>
-                    </div>
+                <div class="moon-garden-header">
+                    <span class="moon-garden-day" style="color:${ELEMENT_COLOR[moonSign.el]}">${moonSign.el}tag</span>
+                    <span class="moon-garden-sub">Heute günstig:</span>
                 </div>
+                <ul class="moon-garden-tips">
+                    ${moonSign.tips.map(t => `<li>${t}</li>`).join('')}
+                </ul>
+                <div class="moon-garden-avoid">⚠️ ${moonSign.avoid}</div>
             </div>
         </div>
     `;
