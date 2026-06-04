@@ -1604,59 +1604,67 @@ body.panel-hidden .map-wrapper {
     margin-bottom: 0.75rem;
 }
 
-/* ---- Sternzeichen-Karte (Mond-Tab) ---- */
+/* ---- Mondkalender-Karte (Mond-Tab) ---- */
 .zodiac-card {
     background: var(--card-bg);
     border-radius: var(--radius);
-    padding: 1rem 1.25rem;
+    padding: 1rem 1.25rem 1.1rem;
     margin: 0 1rem;
 }
 
-.zodiac-row {
+.moon-garden-header {
     display: flex;
-    align-items: flex-start;
-    gap: 1rem;
+    align-items: baseline;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
 }
 
-.zodiac-item {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 0.2rem;
-}
-
-.zodiac-divider {
-    width: 1px;
-    min-height: 80px;
-    background: var(--divider-color);
-    flex-shrink: 0;
-    align-self: stretch;
-}
-
-.zodiac-label {
-    font-size: 0.72rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: var(--text-muted);
-    margin-bottom: 0.15rem;
-}
-
-.zodiac-sign {
+.moon-garden-day {
     font-size: 1.15rem;
-    font-weight: 700;
-    color: var(--text-primary);
+    font-weight: 800;
+    letter-spacing: 0.01em;
 }
 
-.zodiac-element {
+.moon-garden-sub {
     font-size: 0.78rem;
     font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
 }
 
-.zodiac-hint {
-    font-size: 0.75rem;
-    color: var(--text-muted);
+.moon-garden-tips {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 0.75rem 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+}
+
+.moon-garden-tips li {
+    font-size: 0.85rem;
+    color: var(--text-primary);
     line-height: 1.4;
-    margin-top: 0.15rem;
+    padding-left: 1.2rem;
+    position: relative;
+}
+
+.moon-garden-tips li::before {
+    content: "✓";
+    position: absolute;
+    left: 0;
+    color: var(--accent);
+    font-weight: 700;
+    font-size: 0.8rem;
+}
+
+.moon-garden-avoid {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    background: var(--forecast-bg);
+    border-radius: 7px;
+    padding: 0.45rem 0.75rem;
+    line-height: 1.4;
 }
 
