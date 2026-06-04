@@ -1533,11 +1533,18 @@ body.panel-hidden .map-wrapper {
     flex-direction: column;
     align-items: center;
     gap: 0.3rem;
-    padding: 0.5rem 1rem 0;
+    padding: 0;
+    max-height: 0;
+    overflow: hidden;
     opacity: 0;
     transform: translateY(0);
     pointer-events: none;
     user-select: none;
+    transition: max-height 0.2s, padding 0.2s, opacity 0.2s;
+}
+.pull-indicator.pull-visible {
+    padding: 0.5rem 1rem 0;
+    max-height: 60px;
 }
 
 .pull-icon {
