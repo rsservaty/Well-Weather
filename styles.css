@@ -1547,3 +1547,59 @@ body.panel-hidden .map-wrapper {
     to   { transform: rotate(360deg); }
 }
 
+/* ---- Lokale Ortszeit Badge (Wetter-Tab) ---- */
+.local-time-badge {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    background: var(--forecast-bg);
+    border: 1px solid var(--divider-color);
+    border-radius: 20px;
+    padding: 2px 9px;
+    white-space: nowrap;
+}
+
+/* ---- UV Dual Row (Aktuell + Max) ---- */
+.uv-dual-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    gap: 1rem;
+    margin-bottom: 0.75rem;
+}
+
+.uv-dual-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.15rem;
+    flex: 1;
+}
+
+.uv-dual-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    margin-bottom: 0.1rem;
+}
+
+.uv-dual-divider {
+    width: 1px;
+    height: 60px;
+    background: var(--divider-color);
+    flex-shrink: 0;
+}
+
+.uv-advice-box {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    background: var(--forecast-bg);
+    border-radius: 8px;
+    padding: 0.5rem 0.75rem;
+    text-align: center;
+    margin-bottom: 0.75rem;
+}
+
