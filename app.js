@@ -1763,6 +1763,7 @@ if ('serviceWorker' in navigator) {
         const progress = Math.min(dy / THRESHOLD, 1);
         const translate = Math.min(dy * 0.45, THRESHOLD * 0.6);
 
+        indicator.classList.add('pull-visible');
         indicator.style.transform  = `translateY(${translate}px)`;
         indicator.style.opacity    = String(progress);
         indicator.querySelector('.pull-icon').style.transform =
@@ -1792,6 +1793,7 @@ if ('serviceWorker' in navigator) {
 
     function resetIndicator() {
         if (!indicator) return;
+        indicator.classList.remove('pull-visible');
         indicator.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
         indicator.style.transform  = 'translateY(0)';
         indicator.style.opacity    = '0';
