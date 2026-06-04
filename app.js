@@ -299,7 +299,8 @@ async function loadWeatherForCoords(lat, lon, cityName) {
         : null;
 
     if (airResult.status === 'fulfilled' && airResult.value) {
-        renderAir(airResult.value, pressure);
+        const _cur = weatherResult.status === 'fulfilled' ? (weatherResult.value?.current || {}) : {};
+        renderAir(airResult.value, pressure, _cur.temperature_2m ?? null, _cur.relative_humidity_2m ?? null);
     }
 
     renderWarnings(warnResult.status === 'fulfilled' ? warnResult.value : null);
@@ -823,7 +824,7 @@ async function fetchAirQuality(lat, lon) {
     } catch { return null; }
 }
 
-function renderAir(data, pressure) {
+function renderAir(data, pressure, temp, humidity) {
     const cur = data.current || {};
     const aqi = cur.european_aqi != null ? cur.european_aqi : null;
 
@@ -874,6 +875,19 @@ function renderAir(data, pressure) {
         </div>`;
     }).join('');
 
+    // Schwüle berechnen
+    let schwueleLabel = '—';
+    let schwueleColor = 'var(--text-muted)';
+    let schwueleDesc  = '';
+    if (temp != null && humidity != null) {
+        const isDampf = temp > 16 && humidity > 60;
+        if (temp >= 28 && humidity >= 80)      { schwueleLabel = 'Sehr schwül';  schwueleColor = '#ef4444'; schwueleDesc = 'Körper kann Wärme kaum abgeben'; }
+        else if (temp >= 24 && humidity >= 70) { schwueleLabel = 'Schwül';       schwueleColor = '#f97316'; schwueleDesc = 'Deutlich belastend, viel trinken'; }
+        else if (temp >= 20 && humidity >= 65) { schwueleLabel = 'Leicht schwül';schwueleColor = '#eab308'; schwueleDesc = 'Leicht drückend, besonders bei Anstrengung'; }
+        else if (isDampf)                      { schwueleLabel = 'Angenehm';     schwueleColor = '#22c55e'; schwueleDesc = 'Luft fühlt sich frisch an'; }
+        else                                   { schwueleLabel = 'Trocken';      schwueleColor = '#22c55e'; schwueleDesc = 'Luft ist trocken und leicht'; }
+    }
+
     document.getElementById('luftContent').innerHTML = `
         <div class="luft-wrapper">
             <div class="aqi-card">
@@ -899,6 +913,13 @@ function renderAir(data, pressure) {
                     <span class="pressure-value">${pressure != null ? pressure.toFixed(0) + ' hPa' : '—'}</span>
                 </div>
                 <div class="pressure-desc">${pressure != null ? (pressure < 1000 ? 'Tief — wechselhaftes Wetter' : pressure < 1013 ? 'Wechselhaft' : 'Hoch — stabiles Wetter') : ''}</div>
+            </div>
+            <div class="schwuele-card">
+                <div class="pressure-header">
+                    <span class="pressure-label">💧 Schwüle</span>
+                    <span class="pressure-value" style="color:${schwueleColor}">${schwueleLabel}</span>
+                </div>
+                <div class="pressure-desc">${schwueleDesc}</div>
             </div>
             <div class="section-divider"><span>Pollenflug heute</span></div>
             <div class="pollen-card">
