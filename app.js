@@ -241,6 +241,7 @@ async function loadWeatherForCoords(lat, lon, cityName) {
             'temperature_2m_max',
             'temperature_2m_min',
             'precipitation_sum',
+            'precipitation_probability_max',
             'sunrise',
             'sunset',
             'uv_index_max',
@@ -249,6 +250,7 @@ async function loadWeatherForCoords(lat, lon, cityName) {
             'temperature_2m',
             'apparent_temperature',
             'precipitation',
+            'precipitation_probability',
             'wind_speed_10m',
             'visibility',
             'weather_code',
@@ -259,6 +261,7 @@ async function loadWeatherForCoords(lat, lon, cityName) {
             'temperature_2m',
             'apparent_temperature',
             'precipitation',
+            'precipitation_probability',
             'wind_speed_10m',
             'visibility',
             'weather_code',
@@ -361,7 +364,18 @@ function renderWeather(data, cityName, lat, lon) {
     }
     els.currentDesc.textContent    = wmo.label;
     els.feelsLike.textContent      = `${Math.round(cur.apparent_temperature)}°C`;
-    els.precipitation.textContent  = cur.precipitation != null ? `${cur.precipitation} mm` : '—';
+    // Niederschlag: mm + stündliche Wahrscheinlichkeit
+    {
+        const hourly = data.hourly;
+        const _pNow = new Date();
+        const _pPad = n => String(n).padStart(2, '0');
+        const _pH = `${_pNow.getFullYear()}-${_pPad(_pNow.getMonth()+1)}-${_pPad(_pNow.getDate())}T${_pPad(_pNow.getHours())}`;
+        const _pIdx = (hourly.time || []).findIndex(t => t.startsWith(_pH));
+        const prob = _pIdx >= 0 ? (hourly.precipitation_probability || [])[_pIdx] : null;
+        const mmStr = cur.precipitation != null ? `${cur.precipitation} mm` : '—';
+        const pStr  = prob != null ? ` · ${prob}%` : '';
+        els.precipitation.textContent = mmStr + pStr;
+    }
     els.windSpeed.textContent      = cur.wind_speed_10m != null ? `${Math.round(cur.wind_speed_10m)} km/h` : '—';
 
     // Sichtweite (in Meter → km)
@@ -405,6 +419,7 @@ function renderWeather(data, cityName, lat, lon) {
         const code     = hourly.weather_code[idx];
         const temp     = hourly.temperature_2m[idx];
         const prec     = hourly.precipitation[idx];
+        const prob     = (hourly.precipitation_probability || [])[idx];
         const wmoH     = getWMO(code);
         const hour     = timeStr.slice(11, 16); // "14:00"
         const isNow    = i === 0;
@@ -415,7 +430,7 @@ function renderWeather(data, cityName, lat, lon) {
             <div class="hourly-time">${isNow ? 'Jetzt' : hour}</div>
             <div class="hourly-icon">${wmoH.icon}</div>
             <div class="hourly-temp ${tempColorClass(temp)}">${Math.round(temp)}°</div>
-            ${prec > 0 ? `<div class="hourly-precip">💧${prec.toFixed(1)}</div>` : ''}
+            ${prob > 0 ? `<div class="hourly-precip">🌂${prob}%</div>` : ''}
         `;
         strip.appendChild(card);
     });
@@ -455,6 +470,7 @@ function renderWeather(data, cityName, lat, lon) {
         const tMax  = daily.temperature_2m_max[i];
         const tMin  = daily.temperature_2m_min[i];
         const prec  = daily.precipitation_sum[i];
+        const prob  = (daily.precipitation_probability_max || [])[i];
         const wmoD  = getWMO(code);
         const today = isToday(dateStr);
 
@@ -462,7 +478,8 @@ function renderWeather(data, cityName, lat, lon) {
         card.className = 'forecast-card' + (today ? ' today' : '');
 
         const dayLabel = today ? 'Heute' : formatDate(dateStr);
-        const precText = prec > 0 ? `💧 ${prec.toFixed(1)} mm` : '';
+        const probStr = prob != null && prob > 0 ? ` · ${prob}%` : '';
+        const precText = prec > 0 ? `💧 ${prec.toFixed(1)} mm${probStr}` : (prob > 0 ? `🌂 ${prob}%` : '');
 
         // Temperaturbalken
         const barLeft  = ((tMin - weekMin) / weekRange * 100).toFixed(1);
