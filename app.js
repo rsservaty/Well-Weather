@@ -1273,8 +1273,10 @@ function renderWarnings(data) {
     if (!relevant.length) {
         container.innerHTML = '';
         container.classList.remove('has-warnings');
+        container.style.display = 'none';
         return;
     }
+    container.style.display = 'flex';
     container.classList.add('has-warnings');
 
     function eventIcon(event) {
