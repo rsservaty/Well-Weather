@@ -949,9 +949,81 @@ function moonEmoji(age) {
 
 const MONTHS_DE = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
 
+
+// =====================================================
+// STERNZEICHEN — Mond & Sonne
+// =====================================================
+const ZODIAC = [
+    { name: 'Widder',      emoji: '♈', el: 'Feuer',  hint: 'Energie & Aktivität · Haare schneiden, Sport' },
+    { name: 'Stier',       emoji: '♉', el: 'Erde',   hint: 'Beständigkeit · Gartenpflege, Wurzelgemüse' },
+    { name: 'Zwillinge',   emoji: '♊', el: 'Luft',   hint: 'Kommunikation · Informationen sammeln' },
+    { name: 'Krebs',       emoji: '♋', el: 'Wasser', hint: 'Fürsorge · Gießen, Blattpflanzen' },
+    { name: 'Löwe',        emoji: '♌', el: 'Feuer',  hint: 'Ausdruck & Kraft · Obst, Früchte ernten' },
+    { name: 'Jungfrau',    emoji: '♍', el: 'Erde',   hint: 'Ordnung · Heilpflanzen, Kräuter ernten' },
+    { name: 'Waage',       emoji: '♎', el: 'Luft',   hint: 'Ausgleich · Blumen pflanzen, Harmonie' },
+    { name: 'Skorpion',    emoji: '♏', el: 'Wasser', hint: 'Tiefe · Entgiftung, Fasten beginnen' },
+    { name: 'Schütze',     emoji: '♐', el: 'Feuer',  hint: 'Expansion · Reisen, Neues wagen' },
+    { name: 'Steinbock',   emoji: '♑', el: 'Erde',   hint: 'Struktur · Knochen stärken, Zähne' },
+    { name: 'Wassermann',  emoji: '♒', el: 'Luft',   hint: 'Innovation · Kreativität, neue Ideen' },
+    { name: 'Fische',      emoji: '♓', el: 'Wasser', hint: 'Intuition · Ruhe, meditieren, schlafen' },
+];
+
+const ELEMENT_COLOR = { 'Feuer': '#f97316', 'Erde': '#84cc16', 'Luft': '#38bdf8', 'Wasser': '#818cf8' };
+
+function moonZodiacSign(date) {
+    // Astronomische Berechnung der Mond-Ekliptiklänge (vereinfacht nach Meeus)
+    const JD  = date.getTime() / 86400000 + 2440587.5;
+    const T   = (JD - 2451545.0) / 36525;
+    const rad = d => ((d % 360) + 360) % 360 * Math.PI / 180;
+
+    const Lp  = 218.3164477 + 481267.88123421 * T;
+    const D   = 297.8501921 + 445267.1114034  * T;
+    const M   = 357.5291092 + 35999.0502909   * T;
+    const Mp  = 134.9633964 + 477198.8675055  * T;
+    const F   = 93.2720950  + 483202.0175233  * T;
+
+    const SumL =
+        6288774 * Math.sin(rad(Mp))
+      + 1274027 * Math.sin(rad(2*D - Mp))
+      +  658314 * Math.sin(rad(2*D))
+      +  213618 * Math.sin(rad(2*Mp))
+      -  185116 * Math.sin(rad(M))
+      -  114332 * Math.sin(rad(2*F))
+      +   58793 * Math.sin(rad(2*D - 2*Mp))
+      +   57066 * Math.sin(rad(2*D - M - Mp))
+      +   53322 * Math.sin(rad(2*D + Mp))
+      +   45758 * Math.sin(rad(2*D - M))
+      -   40923 * Math.sin(rad(M - Mp))
+      -   34720 * Math.sin(rad(D))
+      -   30383 * Math.sin(rad(M + Mp));
+
+    const lon = ((Lp + SumL / 1000000) % 360 + 360) % 360;
+    return ZODIAC[Math.floor(lon / 30)];
+}
+
+function sunZodiacSign(date) {
+    const m = date.getMonth() + 1;
+    const d = date.getDate();
+    // [Monat, Tag ab dem, Index in ZODIAC]
+    const boundaries = [
+        [1,20,10],[2,19,11],[3,21,0],[4,20,1],[5,21,2],
+        [6,21,3],[7,23,4],[8,23,5],[9,23,6],[10,23,7],[11,22,8],[12,22,9]
+    ];
+    let idx = 9; // Steinbock als default (Dez 22 - Jan 19 überspannt Jahreswechsel)
+    for (const [bm, bd, zi] of boundaries) {
+        if (m === bm && d >= bd) idx = zi;
+        else if (m > bm) idx = zi;
+    }
+    // Korrektur: Jan vor dem 20. = Steinbock
+    if (m === 1 && d < 20) idx = 9;
+    return ZODIAC[idx];
+}
+
 function renderMoon() {
-    const today = new Date();
-    const m     = moonPhaseData(today);
+    const today    = new Date();
+    const m        = moonPhaseData(today);
+    const moonSign = moonZodiacSign(today);
+    const sunSign  = sunZodiacSign(today);
     const year  = today.getFullYear();
     const month = today.getMonth();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -987,6 +1059,24 @@ function renderMoon() {
                     <div class="moon-next-item">
                         <div class="moon-next-label">🌑 Nächster Neumond</div>
                         <div class="moon-next-value">in ${m.dToNew} Tagen</div>
+                    </div>
+                </div>
+            </div>
+            <div class="section-divider"><span>Sternzeichen heute</span></div>
+            <div class="zodiac-card">
+                <div class="zodiac-row">
+                    <div class="zodiac-item">
+                        <div class="zodiac-label">🌙 Mondzeichen</div>
+                        <div class="zodiac-sign">${moonSign.emoji} ${moonSign.name}</div>
+                        <div class="zodiac-element" style="color:${ELEMENT_COLOR[moonSign.el]}">${moonSign.el}zeichen</div>
+                        <div class="zodiac-hint">${moonSign.hint}</div>
+                    </div>
+                    <div class="zodiac-divider"></div>
+                    <div class="zodiac-item">
+                        <div class="zodiac-label">☀️ Sonnenzeichen</div>
+                        <div class="zodiac-sign">${sunSign.emoji} ${sunSign.name}</div>
+                        <div class="zodiac-element" style="color:${ELEMENT_COLOR[sunSign.el]}">${sunSign.el}zeichen</div>
+                        <div class="zodiac-hint">${sunSign.hint}</div>
                     </div>
                 </div>
             </div>
