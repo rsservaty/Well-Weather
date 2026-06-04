@@ -1582,8 +1582,8 @@ function renderBio(data, airData) {
         for (let i = hIdx; i < hIdx + 24 && i < times.length; i++) {
             const s = calcHourlyScore(cat, i);
             const t = times[i].slice(11, 16);
-            html += `<div class="bio-hour-block" style="background:${colors[s]}20;border-top:3px solid ${colors[s]}">
-                <span class="bio-hour-time">${t}</span>
+            html += `<div class="bio-hour-block" style="background:${colors[s]}35;border-top:4px solid ${colors[s]}">
+                <span class="bio-hour-time" style="color:${colors[s]}">${t}</span>
             </div>`;
         }
         html += '</div>';
