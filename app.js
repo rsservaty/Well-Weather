@@ -430,7 +430,7 @@ function renderWeather(data, cityName, lat, lon) {
             <div class="hourly-time">${isNow ? 'Jetzt' : hour}</div>
             <div class="hourly-icon">${wmoH.icon}</div>
             <div class="hourly-temp ${tempColorClass(temp)}">${Math.round(temp)}°</div>
-            ${prob > 0 ? `<div class="hourly-precip">🌂${prob}%</div>` : ''}
+            ${prob > 0 ? `<div class="hourly-precip">☔${prob}%</div>` : ''}
         `;
         strip.appendChild(card);
     });
@@ -479,7 +479,7 @@ function renderWeather(data, cityName, lat, lon) {
 
         const dayLabel = today ? 'Heute' : formatDate(dateStr);
         const probStr = prob != null && prob > 0 ? ` · ${prob}%` : '';
-        const precText = prec > 0 ? `💧 ${prec.toFixed(1)} mm${probStr}` : (prob > 0 ? `🌂 ${prob}%` : '');
+        const precText = prec > 0 ? `💧 ${prec.toFixed(1)} mm${probStr}` : (prob > 0 ? `☔ ${prob}%` : '');
 
         // Temperaturbalken
         const barLeft  = ((tMin - weekMin) / weekRange * 100).toFixed(1);
