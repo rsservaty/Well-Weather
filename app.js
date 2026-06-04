@@ -90,6 +90,25 @@ function weatherCardStyle(code, isDay) {
     return (isDark ? dark : light)[cat] || (isDark ? dark : light)['overcast'];
 }
 
+function tempColorClass(t) {
+    if (t <= 0)  return 'temp-cold';
+    if (t <= 10) return 'temp-cool';
+    if (t <= 18) return 'temp-mild';
+    if (t <= 26) return 'temp-warm';
+    if (t <= 32) return 'temp-hot';
+    return 'temp-very-hot';
+}
+
+function tempHex(t) {
+    if (t <= 0)  return '#60a5fa';
+    if (t <= 10) return '#34d399';
+    if (t <= 18) return '#a3e635';
+    if (t <= 26) return '#fbbf24';
+    if (t <= 32) return '#fb923c';
+    return '#f87171';
+}
+
+
 function getWMO(code) {
     return WMO[code] || { label: 'Unbekannt', icon: '🌡️' };
 }
@@ -364,7 +383,7 @@ function renderWeather(data, cityName, lat, lon) {
         card.innerHTML = `
             <div class="hourly-time">${isNow ? 'Jetzt' : hour}</div>
             <div class="hourly-icon">${wmoH.icon}</div>
-            <div class="hourly-temp">${Math.round(temp)}°</div>
+            <div class="hourly-temp ${tempColorClass(temp)}">${Math.round(temp)}°</div>
             ${prec > 0 ? `<div class="hourly-precip">💧${prec.toFixed(1)}</div>` : ''}
         `;
         strip.appendChild(card);
@@ -382,6 +401,14 @@ function renderWeather(data, cityName, lat, lon) {
     // 7-Tage-Vorhersage
     els.forecastGrid.innerHTML = '';
     const days = daily.time || [];
+
+    // Gesamtbereich aller Tage für Balken-Normierung
+    const allMax = daily.temperature_2m_max || [];
+    const allMin = daily.temperature_2m_min || [];
+    const weekMin = Math.min(...allMin.filter(v => v != null));
+    const weekMax = Math.max(...allMax.filter(v => v != null));
+    const weekRange = weekMax - weekMin || 1;
+
     days.forEach((dateStr, i) => {
         const code  = daily.weather_code[i];
         const tMax  = daily.temperature_2m_max[i];
@@ -396,15 +423,23 @@ function renderWeather(data, cityName, lat, lon) {
         const dayLabel = today ? 'Heute' : formatDate(dateStr);
         const precText = prec > 0 ? `💧 ${prec.toFixed(1)} mm` : '';
 
+        // Temperaturbalken
+        const barLeft  = ((tMin - weekMin) / weekRange * 100).toFixed(1);
+        const barWidth = ((tMax - tMin)    / weekRange * 100).toFixed(1);
+        const barGrad  = `linear-gradient(to right, ${tempHex(tMin)}, ${tempHex(tMax)})`;
+
         card.innerHTML = `
             <div class="forecast-day">${dayLabel}</div>
             <div class="forecast-icon">${wmoD.icon}</div>
             <div class="forecast-bar-wrapper">
                 <div class="forecast-desc">${wmoD.label}</div>
                 ${precText ? `<div class="forecast-precip">${precText}</div>` : ''}
+                <div class="temp-bar-track">
+                    <div class="temp-bar-fill" style="left:${barLeft}%;width:${barWidth}%;background:${barGrad}"></div>
+                </div>
             </div>
             <div class="forecast-temps">
-                <span class="temp-max">${Math.round(tMax)}°</span>
+                <span class="temp-max ${tempColorClass(tMax)}">${Math.round(tMax)}°</span>
                 <span class="temp-min">${Math.round(tMin)}°</span>
             </div>
         `;
