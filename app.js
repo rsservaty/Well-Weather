@@ -419,12 +419,22 @@ function renderWeather(data, cityName, lat, lon) {
         else if (_wTd >= 16) _wSchwuele = '💧 Leicht feucht';
     }
 
+    // UV-Hinweis für Wetter-Tab (Tagesmax)
+    const _uvMax = (daily.uv_index_max || [])[0] ?? null;
+    let   _wUV = '';
+    if (_uvMax != null) {
+        if      (_uvMax >= 8) _wUV = `☀️ UV ${_uvMax} — LSF 50+ empfohlen`;
+        else if (_uvMax >= 6) _wUV = `🕶️ UV ${_uvMax} — Sonnenschutz notwendig, LSF 30+`;
+        else if (_uvMax >= 3) _wUV = `🕶️ UV ${_uvMax} — Sonnenschutz empfohlen`;
+    }
+
     hourlySection.innerHTML = `
         <div class="section-divider"><span>Nächste 24 Stunden</span></div>
         <div class="hourly-scroll">
             <div class="hourly-strip" id="hourlyStrip"></div>
         </div>
         ${_wSchwuele ? `<div class="schwuele-hint">${_wSchwuele}</div>` : ''}
+        ${_wUV ? `<div class="schwuele-hint">${_wUV}</div>` : ''}
     `;
 
     const strip = document.getElementById('hourlyStrip');
