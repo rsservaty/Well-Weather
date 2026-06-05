@@ -1723,11 +1723,6 @@ function renderBio(data, airData) {
             ${bioCard('🧠', 'Kopf / Migräne',  Math.min(migraene,  2), migraeneHint(),  'migraene')}
             ${bioCard('🦴', 'Gelenke',          Math.min(gelenke,   2), gelenkeHint(),   'gelenke')}
             ${bioCard('🫁', 'Atemwege',         Math.min(atemwege,  2), atemwegeHint(),  'atemwege')}
-            <div class="bio-meta">
-                <span>Luftdruck-Trend (24h): <strong>${pressureTrendText}</strong></span>
-                <span>Feuchte: <strong>${humidity != null ? humidity + ' %' : '—'}</strong></span>
-                <span>Tagesschwankung: <strong>${tSwing.toFixed(1)} °C</strong></span>
-            </div>
             <p class="bio-disclaimer">Bio-Wetter basiert auf meteorologischen Schwellenwerten. Keine medizinische Aussage.</p>
         </div>
     `;
