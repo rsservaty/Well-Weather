@@ -1734,3 +1734,8 @@ body.panel-hidden .map-wrapper {
     font-style: italic;
 }
 
+
+/* Leaflet Zoom-Buttons: kein Unterstrich */
+.leaflet-control-zoom a {
+    text-decoration: none !important;
+}
