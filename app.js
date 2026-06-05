@@ -109,6 +109,16 @@ function tempHex(t) {
 }
 
 
+// Zentrale UV-Bewertung (genutzt in Wetter-Tab + UV-Tab)
+function uvInfo(v) {
+    if (v == null) return { label: '—',         color: 'var(--text-muted)', adv: '' };
+    if (v <= 2)    return { label: 'Niedrig',   color: '#22c55e', adv: '' };
+    if (v <= 5)    return { label: 'Mäßig',     color: '#eab308', adv: 'Sonnenschutz empfohlen' };
+    if (v <= 7)    return { label: 'Hoch',      color: '#f97316', adv: 'Sonnenschutz notwendig' };
+    if (v <= 10)   return { label: 'Sehr hoch', color: '#ef4444', adv: 'Unbedingt Sonnenschutz!' };
+    return           { label: 'Extrem',      color: '#a855f7', adv: 'Direkte Sonne meiden!' };
+}
+
 function getWMO(code) {
     return WMO[code] || { label: 'Unbekannt', icon: '🌡️' };
 }
@@ -423,10 +433,8 @@ function renderWeather(data, cityName, lat, lon) {
     const _uvMax = (daily.uv_index_max || [])[0] ?? null;
     let   _wUV = '';
     if (_uvMax != null) {
-        if      (_uvMax >= 11) _wUV = `☀️ UV ${_uvMax} — Extrem, Sonnenschutz zwingend!`;
-        else if (_uvMax >= 8)  _wUV = `☀️ UV ${_uvMax} — Unbedingt Sonnenschutz!`;
-        else if (_uvMax >= 6)  _wUV = `🕶️ UV ${_uvMax} — Sonnenschutz notwendig`;
-        else if (_uvMax >= 3)  _wUV = `🕶️ UV ${_uvMax} — Sonnenschutz empfohlen`;
+        const _uvAdv = uvInfo(_uvMax).adv;
+        if (_uvAdv) _wUV = `🕶️ UV ${_uvMax} — ${_uvAdv}`;
     }
 
     hourlySection.innerHTML = `
@@ -1166,14 +1174,7 @@ function renderUV(data) {
     const sunrise = (daily.sunrise || [])[0];
     const sunset  = (daily.sunset  || [])[0];
 
-    function uvInfo(v) {
-        if (v == null) return { label: '—',          color: 'var(--text-muted)', adv: '' };
-        if (v <= 2)    return { label: 'Niedrig',    color: '#22c55e', adv: 'Kein Schutz nötig' };
-        if (v <= 5)    return { label: 'Mäßig',      color: '#eab308', adv: 'Sonnenschutz empfohlen' };
-        if (v <= 7)    return { label: 'Hoch',       color: '#f97316', adv: 'Sonnenschutz notwendig' };
-        if (v <= 10)   return { label: 'Sehr hoch',  color: '#ef4444', adv: 'Unbedingt Sonnenschutz!' };
-        return           { label: 'Extrem',       color: '#a855f7', adv: 'Direkte Sonne meiden!' };
-    }
+    // uvInfo() ist global definiert
     const info = uvInfo(uv);
 
     let arcHtml   = '<p style="color:var(--text-muted);text-align:center;padding:1rem">Standortdaten werden geladen...</p>';
