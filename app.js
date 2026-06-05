@@ -423,9 +423,10 @@ function renderWeather(data, cityName, lat, lon) {
     const _uvMax = (daily.uv_index_max || [])[0] ?? null;
     let   _wUV = '';
     if (_uvMax != null) {
-        if      (_uvMax >= 8) _wUV = `☀️ UV ${_uvMax} — LSF 50+ empfohlen`;
-        else if (_uvMax >= 6) _wUV = `🕶️ UV ${_uvMax} — Sonnenschutz notwendig, LSF 30+`;
-        else if (_uvMax >= 3) _wUV = `🕶️ UV ${_uvMax} — Sonnenschutz empfohlen`;
+        if      (_uvMax >= 11) _wUV = `☀️ UV ${_uvMax} — Extrem, Sonnenschutz zwingend!`;
+        else if (_uvMax >= 8)  _wUV = `☀️ UV ${_uvMax} — Unbedingt Sonnenschutz!`;
+        else if (_uvMax >= 6)  _wUV = `🕶️ UV ${_uvMax} — Sonnenschutz notwendig`;
+        else if (_uvMax >= 3)  _wUV = `🕶️ UV ${_uvMax} — Sonnenschutz empfohlen`;
     }
 
     hourlySection.innerHTML = `
