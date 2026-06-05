@@ -698,9 +698,7 @@ function tryGeolocation() {
 // ---- Panel Toggle (Tippen auf Handle oder Button) ----
 const dragHandle   = document.getElementById('dragHandle');
 const weatherPanel = document.getElementById('weatherPanel');
-const mapToggleBtn  = document.getElementById('mapToggleBtn');
-const mapZoomOutBtn = document.getElementById('mapZoomOutBtn');
-if (mapZoomOutBtn) mapZoomOutBtn.addEventListener('click', () => map && map.zoomOut());
+const mapToggleBtn = document.getElementById('mapToggleBtn');
 const mapWrapper   = document.querySelector('.map-wrapper');
 
 let panelVisible = true;
