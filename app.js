@@ -728,7 +728,10 @@ function hidePanel() {
     if (!window.matchMedia('(max-width: 768px)').matches) {
         mapWrapper.style.height = '';
     }
-    setTimeout(() => { map.invalidateSize(); }, 50);
+    setTimeout(() => {
+        map.invalidateSize();
+        map.zoomOut(2);
+    }, 50);
     mapToggleBtn.textContent = '⛶';
     mapToggleBtn.title = 'Panel einblenden';
 }
