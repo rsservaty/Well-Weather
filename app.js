@@ -109,6 +109,17 @@ function tempHex(t) {
 }
 
 
+// Zentrale Schwüle-Bewertung (genutzt in Wetter-Tab, Luft-Tab, Bio-Wetter)
+function schwueleInfo(td) {
+    if (td == null)  return { label: '—',                          color: 'var(--text-muted)', hint: '' };
+    if (td >= 24)    return { label: 'Luft: tropisch, sehr belastend', color: '#ef4444', hint: '💧 Luft: tropisch, sehr belastend' };
+    if (td >= 21)    return { label: 'Luft: sehr schwül, belastend',   color: '#f97316', hint: '💧 Luft: sehr schwül, belastend' };
+    if (td >= 18)    return { label: 'Luft: schwül',                   color: '#eab308', hint: '💧 Luft: schwül' };
+    if (td >= 16)    return { label: 'Luft: drückend, leicht schwül',  color: '#a3e635', hint: '💧 Luft: drückend, leicht schwül' };
+    if (td >= 10)    return { label: 'Luft: angenehm/frisch',          color: '#22c55e', hint: '' };
+    return             { label: 'Luft: trocken',                   color: '#22c55e', hint: '' };
+}
+
 // Zentrale UV-Bewertung (genutzt in Wetter-Tab + UV-Tab)
 function uvInfo(v) {
     if (v == null) return { label: '—',         color: 'var(--text-muted)', adv: '' };
@@ -429,10 +440,7 @@ function renderWeather(data, cityName, lat, lon) {
     let   _wSchwuele = '';
     if (_wTemp != null && _wHum != null) {
         const _wTd = _wTemp - (100 - _wHum) / 5;
-        if      (_wTd >= 24) _wSchwuele = '💧 Sehr schwül — Wärmeabgabe stark eingeschränkt';
-        else if (_wTd >= 21) _wSchwuele = '💧 Schwül — deutlich belastend';
-        else if (_wTd >= 18) _wSchwuele = '💧 Leicht schwül';
-        else if (_wTd >= 16) _wSchwuele = '💧 Leicht feucht';
+        _wSchwuele = schwueleInfo(_wTd).hint;
     }
 
     // UV-Hinweis für Wetter-Tab (Tagesmax)
@@ -921,18 +929,14 @@ function renderAir(data, pressure, temp, humidity) {
     }).join('');
 
     // Schwüle berechnen (Taupunkt: Td ≈ T - (100 - RH) / 5)
+    let dewPoint = null;
     let schwueleLabel = '—';
     let schwueleColor = 'var(--text-muted)';
-    let schwueleDesc  = '';
-    let dewPoint      = null;
     if (temp != null && humidity != null) {
         dewPoint = temp - (100 - humidity) / 5;
-        if (dewPoint >= 24)      { schwueleLabel = 'Sehr schwül';   schwueleColor = '#ef4444'; schwueleDesc = 'Körper kann Wärme kaum abgeben'; }
-        else if (dewPoint >= 21) { schwueleLabel = 'Schwül';        schwueleColor = '#f97316'; schwueleDesc = 'Deutlich belastend, viel trinken'; }
-        else if (dewPoint >= 18) { schwueleLabel = 'Leicht schwül'; schwueleColor = '#eab308'; schwueleDesc = 'Leicht drückend, besonders bei Anstrengung'; }
-        else if (dewPoint >= 16) { schwueleLabel = 'Leicht feucht'; schwueleColor = '#a3e635'; schwueleDesc = 'Spürbar feuchte Luft'; }
-        else if (dewPoint >= 10) { schwueleLabel = 'Angenehm';      schwueleColor = '#22c55e'; schwueleDesc = 'Luft fühlt sich frisch an'; }
-        else                     { schwueleLabel = 'Trocken';       schwueleColor = '#22c55e'; schwueleDesc = 'Luft ist trocken und leicht'; }
+        const si = schwueleInfo(dewPoint);
+        schwueleLabel = si.label;
+        schwueleColor = si.color;
     }
 
     document.getElementById('luftContent').innerHTML = `
@@ -963,7 +967,7 @@ function renderAir(data, pressure, temp, humidity) {
                 <div class="luft-cond-item">
                     <span class="luft-cond-label">💧 Schwüle</span>
                     <span class="luft-cond-value" style="color:${schwueleColor}">${schwueleLabel}</span>
-                    <span class="luft-cond-desc">${schwueleDesc}</span>
+                    <span class="luft-cond-desc">${dewPoint != null ? 'Taupunkt ' + dewPoint.toFixed(0) + ' °C' : ''}</span>
                 </div>
                 <div class="luft-cond-item">
                     <span class="luft-cond-label">💦 Luftfeuchte</span>
@@ -1661,8 +1665,8 @@ function renderBio(data, airData) {
 
     // Hinweis-Texte
     function kreislaufHint() {
-        if (dewPt != null && dewPt >= 21) return 'Sehr schwüle Luft — Kreislauf stark belastet, viel trinken.';
-        if (dewPt != null && dewPt >= 16) return 'Feuchte Luft erhöht die Kreislaufbelastung.';
+        if (dewPt != null && dewPt >= 21) return schwueleInfo(dewPt).label + ' — Kreislauf stark belastet, viel trinken.';
+        if (dewPt != null && dewPt >= 16) return schwueleInfo(dewPt).label + ' — erhöht die Kreislaufbelastung.';
         if (pressureDiff < -8) return 'Starker Druckabfall — Kreislauf kann belastet sein.';
         if (pressureDiff < -3) return 'Leichter Druckabfall spürbar.';
         if (Math.abs(tChange) > 8) return 'Großer Temperatursprung morgen.';
@@ -1691,16 +1695,16 @@ function renderBio(data, airData) {
     function muedigkeitHint() {
         if (pressureDiff < -6) return 'Deutlicher Druckabfall — Antriebslosigkeit und Müdigkeit wahrscheinlich.';
         if (pressureDiff < -3) return 'Leichter Druckabfall — kann die Tagesvitalität dämpfen.';
-        if (dewPt != null && dewPt >= 21) return 'Sehr schwüle Luft — Körper muss Wärme stark regulieren, Energie sinkt.';
-        if (dewPt != null && dewPt >= 16) return 'Feuchte Luft — Wärmeabgabe erschwert, kann müde machen.';
+        if (dewPt != null && dewPt >= 21) return schwueleInfo(dewPt).label + ' — Energie sinkt, Körper kämpft gegen Hitze.';
+        if (dewPt != null && dewPt >= 16) return schwueleInfo(dewPt).label + ' — Wärmeabgabe erschwert, kann müde machen.';
         if (cloudCover != null && cloudCover > 80) return 'Trübes Licht mindert die Serotoninproduktion — etwas mehr Müdigkeit möglich.';
         return 'Gute Voraussetzungen für einen wachen, energiereichen Tag.';
     }
     function schlafHint() {
         if (tSwing > 12) return 'Große Temperaturschwankung heute — Schlaf kann unruhig sein.';
         if (tSwing > 8) return 'Spürbare Temperaturdifferenz zwischen Tag und Nacht.';
-        if (dewPt != null && dewPt >= 21) return 'Sehr schwüle Nacht — Schlaf stark beeinträchtigt.';
-        if (dewPt != null && dewPt >= 16) return 'Feuchte Luft kann den Schlaf beeinträchtigen.';
+        if (dewPt != null && dewPt >= 21) return schwueleInfo(dewPt).label + ' — Schlaf stark beeinträchtigt.';
+        if (dewPt != null && dewPt >= 16) return schwueleInfo(dewPt).label + ' — kann den Schlaf beeinträchtigen.';
         if (pressureDiff < -3) return 'Wetterwechsel — kann den Schlaf leicht stören.';
         return 'Gute Schlafbedingungen erwartet.';
     }
@@ -1711,8 +1715,8 @@ function renderBio(data, airData) {
         if (temp != null && temp < 2) return 'Zu kalt — Verletzungsgefahr durch gefrorenen Boden.';
         if (wind > 50) return 'Sehr starker Wind — draußen Sport gefährlich.';
         if (precip > 0.5) return 'Niederschlag — Sport nur mit entsprechender Ausrüstung.';
-        if (dewPt != null && dewPt >= 21) return 'Sehr schwüle Luft — körperliche Belastung stark erhöht, viel trinken.';
-        if (dewPt != null && dewPt >= 16) return 'Feuchte Luft erhöht die Belastung beim Sport.';
+        if (dewPt != null && dewPt >= 21) return schwueleInfo(dewPt).label + ' — körperliche Belastung stark erhöht, viel trinken.';
+        if (dewPt != null && dewPt >= 16) return schwueleInfo(dewPt).label + ' — erhöht die Belastung beim Sport.';
         if (cur.uv_index != null && cur.uv_index > 8) return 'Sehr hoher UV-Index — nur mit Sonnenschutz und in kühlen Stunden.';
         if (wind > 30) return 'Kräftiger Wind — leicht eingeschränkt, aber möglich.';
         if (temp != null && (temp < 8 || temp > 30)) return 'Temperatur am Grenzbereich — angepasste Kleidung empfohlen.';
