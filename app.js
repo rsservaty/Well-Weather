@@ -965,9 +965,9 @@ function renderAir(data, pressure, temp, humidity) {
                     <span class="luft-cond-desc">${pressure != null ? (pressure < 1000 ? 'Tief' : pressure < 1013 ? 'Wechselhaft' : 'Hoch') : ''}</span>
                 </div>
                 <div class="luft-cond-item">
-                    <span class="luft-cond-label">💧 Schwüle</span>
-                    <span class="luft-cond-value" style="color:${schwueleColor}">${schwueleLabel}</span>
-                    <span class="luft-cond-desc">${dewPoint != null ? 'Taupunkt ' + dewPoint.toFixed(0) + ' °C' : ''}</span>
+                    <span class="luft-cond-label">💧 Taupunkt</span>
+                    <span class="luft-cond-value" style="color:${schwueleColor}">${dewPoint != null ? dewPoint.toFixed(0) + ' °C' : '—'}</span>
+                    <span class="luft-cond-desc" style="color:${schwueleColor}">${schwueleLabel}</span>
                 </div>
                 <div class="luft-cond-item">
                     <span class="luft-cond-label">💦 Luftfeuchte</span>
