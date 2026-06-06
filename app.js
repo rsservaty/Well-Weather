@@ -9,7 +9,7 @@
 // ---- Konfiguration ----
 const CONFIG = {
     mapCenter:    [51.5, 12.0],   // Mitteleuropa
-    mapZoom:      5,
+    mapZoom:      8,
     minZoom:      3,
     maxZoom:      12,
     weatherUrl:   'https://api.open-meteo.com/v1/forecast',
