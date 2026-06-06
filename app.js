@@ -204,6 +204,10 @@ function initMap() {
 
     // Klick-Handler
     map.on('click', (e) => {
+        if (!panelVisible) {
+            showPanel();
+            setTimeout(() => { map.zoomIn(2); }, 350);
+        }
         loadWeatherForCoords(e.latlng.lat, e.latlng.lng);
     });
 }
