@@ -206,7 +206,9 @@ function initMap() {
     map.on('click', (e) => {
         if (!panelVisible) {
             showPanel();
-            setTimeout(() => { map.zoomIn(2); }, 350);
+            setTimeout(() => { map.setZoom(9); }, 350);
+        } else {
+            map.setZoom(9);
         }
         loadWeatherForCoords(e.latlng.lat, e.latlng.lng);
     });
