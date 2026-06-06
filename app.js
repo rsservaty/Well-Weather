@@ -292,6 +292,7 @@ async function loadWeatherForCoords(lat, lon, cityName) {
             'precipitation',
             'precipitation_probability',
             'wind_speed_10m',
+            'wind_direction_10m',
             'visibility',
             'weather_code',
             'uv_index',
@@ -328,7 +329,7 @@ async function loadWeatherForCoords(lat, lon, cityName) {
 
     if (airResult.status === 'fulfilled' && airResult.value) {
         const _cur = weatherResult.status === 'fulfilled' ? (weatherResult.value?.current || {}) : {};
-        renderAir(airResult.value, pressure, _cur.temperature_2m ?? null, _cur.relative_humidity_2m ?? null);
+        renderAir(airResult.value, pressure, _cur.temperature_2m ?? null, _cur.relative_humidity_2m ?? null, _cur.wind_speed_10m ?? null, _cur.wind_direction_10m ?? null);
     }
 
     renderWarnings(warnResult.status === 'fulfilled' ? warnResult.value : null);
@@ -877,7 +878,7 @@ async function fetchAirQuality(lat, lon) {
     } catch { return null; }
 }
 
-function renderAir(data, pressure, temp, humidity) {
+function renderAir(data, pressure, temp, humidity, windSpeed, windDir) {
     const cur = data.current || {};
     const aqi = cur.european_aqi != null ? cur.european_aqi : null;
 
@@ -928,6 +929,37 @@ function renderAir(data, pressure, temp, humidity) {
         </div>`;
     }).join('');
 
+    // Beaufort-Skala
+    function beaufort(kmh) {
+        if (kmh < 1)   return { bft: 0, label: 'Windstille' };
+        if (kmh < 6)   return { bft: 1, label: 'Leichter Zug' };
+        if (kmh < 12)  return { bft: 2, label: 'Leichte Brise' };
+        if (kmh < 20)  return { bft: 3, label: 'Schwache Brise' };
+        if (kmh < 29)  return { bft: 4, label: 'Mäßige Brise' };
+        if (kmh < 39)  return { bft: 5, label: 'Frische Brise' };
+        if (kmh < 50)  return { bft: 6, label: 'Starker Wind' };
+        if (kmh < 62)  return { bft: 7, label: 'Steifer Wind' };
+        if (kmh < 75)  return { bft: 8, label: 'Stürmischer Wind' };
+        if (kmh < 89)  return { bft: 9, label: 'Sturm' };
+        if (kmh < 103) return { bft: 10, label: 'Schwerer Sturm' };
+        if (kmh < 117) return { bft: 11, label: 'Orkanartiger Sturm' };
+        return           { bft: 12, label: 'Orkan' };
+    }
+    function windDirLabel(deg) {
+        if (deg == null) return '—';
+        const dirs = ['N','NO','O','SO','S','SW','W','NW'];
+        return dirs[Math.round(deg / 45) % 8];
+    }
+    function windDirArrow(deg) {
+        if (deg == null) return '';
+        // Pfeil zeigt wohin der Wind weht (Richtung + 180°)
+        const arrows = ['↓','↙','←','↖','↑','↗','→','↘'];
+        return arrows[Math.round(deg / 45) % 8];
+    }
+    const bft = windSpeed != null ? beaufort(windSpeed) : null;
+    const windDirStr   = windDirLabel(windDir);
+    const windDirArr   = windDirArrow(windDir);
+
     // Schwüle berechnen (Taupunkt: Td ≈ T - (100 - RH) / 5)
     let dewPoint = null;
     let schwueleLabel = '—';
@@ -973,6 +1005,16 @@ function renderAir(data, pressure, temp, humidity) {
                     <span class="luft-cond-label">💦 Luftfeuchte</span>
                     <span class="luft-cond-value">${humidity != null ? humidity + ' %' : '—'}</span>
                     <span class="luft-cond-desc">${humidity != null ? (humidity < 30 ? 'Sehr trocken' : humidity < 50 ? 'Trocken' : humidity < 70 ? 'Angenehm' : humidity < 85 ? 'Feucht' : 'Sehr feucht') : ''}</span>
+                </div>
+            </div>
+            <div class="wind-card">
+                <div class="wind-card-header">
+                    <span class="wind-card-label">💨 Wind</span>
+                    <span class="wind-card-value">${windSpeed != null ? Math.round(windSpeed) + ' km/h' : '—'} <span class="wind-dir-arrow">${windDirArr}</span></span>
+                </div>
+                <div class="wind-card-row">
+                    <span class="wind-bft">${bft ? 'Bft ' + bft.bft + ' — ' + bft.label : '—'}</span>
+                    <span class="wind-dir-label">${windDirStr !== '—' ? 'aus ' + windDirStr : ''}</span>
                 </div>
             </div>
             <div class="section-divider"><span>Pollenflug heute</span></div>
