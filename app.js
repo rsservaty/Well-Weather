@@ -728,7 +728,7 @@ function showPanel() {
     mapToggleBtn.title = 'Panel ausblenden';
     // Marker nach Aufklappen wieder in die Mitte bringen
     if (marker) {
-        setTimeout(() => { map.panTo(marker.getLatLng()); }, 360);
+        setTimeout(() => { map.panTo(marker.getLatLng()); }, 500);
     }
 }
 
