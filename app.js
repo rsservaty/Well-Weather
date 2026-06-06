@@ -726,6 +726,10 @@ function showPanel() {
     }
     mapToggleBtn.textContent = '🗕';
     mapToggleBtn.title = 'Panel ausblenden';
+    // Marker nach Aufklappen wieder in die Mitte bringen
+    if (marker) {
+        setTimeout(() => { map.panTo(marker.getLatLng()); }, 360);
+    }
 }
 
 function hidePanel() {
