@@ -1741,3 +1741,38 @@ body.panel-hidden .map-wrapper {
 .leaflet-control-zoom a {
     text-decoration: none !important;
 }
+
+/* Wind-Kachel im Luft-Tab */
+.wind-card {
+    background: var(--card-bg);
+    border-radius: 12px;
+    padding: 12px 16px;
+    margin-bottom: 4px;
+}
+.wind-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+}
+.wind-card-label {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    font-weight: 600;
+}
+.wind-card-value {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+.wind-dir-arrow {
+    font-size: 1.1rem;
+    margin-left: 4px;
+}
+.wind-card-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    font-weight: 500;
+}
