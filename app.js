@@ -722,14 +722,13 @@ function showPanel() {
         setMapHeight(28);
     } else {
         mapWrapper.style.height = '';
-        setTimeout(() => { map.invalidateSize(); }, 50);
+        setTimeout(() => {
+            map.invalidateSize();
+            if (marker) map.panTo(marker.getLatLng());
+        }, 350);
     }
     mapToggleBtn.textContent = '🗕';
     mapToggleBtn.title = 'Panel ausblenden';
-    // Marker nach Aufklappen wieder in die Mitte bringen
-    if (marker) {
-        setTimeout(() => { map.panTo(marker.getLatLng()); }, 500);
-    }
 }
 
 function hidePanel() {
@@ -740,7 +739,7 @@ function hidePanel() {
     }
     setTimeout(() => {
         map.invalidateSize();
-        if (map.getZoom() > 5) map.setZoom(5);
+        map.setZoom(Math.max(map.getZoom() - 2, 6));
     }, 50);
     mapToggleBtn.textContent = '⛶';
     mapToggleBtn.title = 'Panel einblenden';
