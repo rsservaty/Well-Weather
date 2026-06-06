@@ -814,6 +814,7 @@ body.panel-hidden .map-wrapper {
 }
 
 .tab-bar {
+    touch-action: pan-x;
     display: flex;
     border-bottom: 2px solid var(--border);
     background: var(--bg-secondary);
@@ -1340,9 +1341,10 @@ body.panel-hidden .map-wrapper {
     line-height: 1.2;
 }
 .luft-cond-desc {
-    font-size: 0.68rem;
+    font-size: 0.78rem;
     color: var(--text-muted);
     line-height: 1.3;
+    font-weight: 500;
 }
 
 /* Schwüle-Einzeiler im Wetter-Tab */
