@@ -740,7 +740,7 @@ function hidePanel() {
     }
     setTimeout(() => {
         map.invalidateSize();
-        map.zoomOut(3);
+        if (map.getZoom() > 5) map.setZoom(5);
     }, 50);
     mapToggleBtn.textContent = '⛶';
     mapToggleBtn.title = 'Panel einblenden';
