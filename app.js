@@ -213,6 +213,8 @@ const els = {
     locationCountry: document.getElementById('locationCountry'),
     currentIcon:   document.getElementById('currentIcon'),
     currentTemp:   document.getElementById('currentTemp'),
+    currentTempMax: document.getElementById('currentTempMax'),
+    currentTempMin: document.getElementById('currentTempMin'),
     currentDesc:   document.getElementById('currentDesc'),
     feelsLike:     document.getElementById('feelsLike'),
     precipitation: document.getElementById('precipitation'),
@@ -460,6 +462,17 @@ function renderWeather(data, cityName, lat, lon) {
     // Aktuell
     els.currentIcon.textContent    = wmo.icon;
     els.currentTemp.textContent    = `${Math.round(cur.temperature_2m)}°C`;
+
+    // Tageshoch / Tagestief (heute, aus daily-Daten)
+    if (els.currentTempMax && els.currentTempMin && daily) {
+        const tMax = daily.temperature_2m_max?.[0];
+        const tMin = daily.temperature_2m_min?.[0];
+        if (tMax != null && tMin != null) {
+            els.currentTempMax.textContent = `${Math.round(tMax)}°`;
+            els.currentTempMax.className   = `temp-max ${tempColorClass(tMax)}`;
+            els.currentTempMin.textContent = `${Math.round(tMin)}°`;
+        }
+    }
 
     // Temperaturtrend: Vergleich aktuell vs. in 3 Stunden
     if (els.tempTrend) {
