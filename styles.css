@@ -465,14 +465,22 @@ body {
 }
 
 .current-temps-hilo .temp-max {
-    font-size: 1.05rem;
-    font-weight: 700;
+    font-size: 1.35rem;
+    font-weight: 800;
 }
 
 .current-temps-hilo .temp-min {
-    font-size: 0.92rem;
+    font-size: 1.1rem;
     color: var(--text-muted);
 }
+
+/* Kraeftigere, besser lesbare Farbtoene fuer Hoch-Wert in der Aktuell-Kachel */
+.current-temps-hilo .temp-max.temp-cold     { color: #2563eb; }
+.current-temps-hilo .temp-max.temp-cool     { color: #059669; }
+.current-temps-hilo .temp-max.temp-mild     { color: #65a30d; }
+.current-temps-hilo .temp-max.temp-warm     { color: #d97706; }
+.current-temps-hilo .temp-max.temp-hot      { color: #ea580c; }
+.current-temps-hilo .temp-max.temp-very-hot { color: #dc2626; }
 
 .weather-icon-large {
     font-size: 3.5rem;
