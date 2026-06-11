@@ -29,7 +29,11 @@ async function fetchWithRetry(url, { timeout = 12000, retries = 1, retryDelay = 
         try {
             const r = await fetch(url, { signal: controller.signal });
             clearTimeout(timer);
-            if (!r.ok) throw new Error(`HTTP ${r.status}`);
+            if (!r.ok) {
+                const httpErr = new Error(`HTTP ${r.status}`);
+                httpErr.status = r.status;
+                throw httpErr;
+            }
             return await r.json();
         } catch (err) {
             clearTimeout(timer);
@@ -40,6 +44,26 @@ async function fetchWithRetry(url, { timeout = 12000, retries = 1, retryDelay = 
             throw err;
         }
     }
+}
+
+// ---- Nutzerfreundliche Fehlermeldung je nach Fehlertyp ----
+// Unterscheidet Server-Ueberlastung (429/502/503) von echten
+// Netzwerkproblemen (Verbindung, CORS-Fehler durch fehlende Header
+// in Fehlerantworten ueberlasteter Server).
+function friendlyFetchErrorMessage(err) {
+    const status = err && err.status;
+
+    if (status === 429) {
+        return 'Der Wetterdienst (Open-Meteo) ist aktuell überlastet (zu viele Anfragen). Bitte versuche es in ein paar Minuten erneut.';
+    }
+    if (status === 502 || status === 503 || status === 504) {
+        return 'Der Wetterdienst (Open-Meteo) ist aktuell nicht erreichbar oder überlastet. Bitte versuche es später erneut – das Problem liegt nicht an deiner Verbindung.';
+    }
+
+    // Kein HTTP-Status -> Netzwerk-/CORS-/Timeout-Fehler. Fehlerantworten
+    // ueberlasteter Server liefern oft keine CORS-Header und erscheinen
+    // dem Browser dann als CORS-Fehler statt als HTTP-Statuscode.
+    return 'Wetterdaten konnten nicht geladen werden. Der Wetterdienst ist evtl. überlastet, oder prüfe deine Internetverbindung.';
 }
 
 // ---- WMO Wetter-Codes ----
@@ -371,7 +395,7 @@ async function loadWeatherForCoords(lat, lon, cityName) {
     } else {
         console.error('Wetterfehler:', weatherResult.reason);
         if (!quickOk) {
-            showError('Wetterdaten konnten nicht geladen werden. Bitte prüfe deine Internetverbindung.');
+            showError(friendlyFetchErrorMessage(weatherResult.reason));
         }
         // Sonst: einfache Ansicht (Stufe 1) bleibt sichtbar, erweiterte
         // Daten (Vorhersage, Luftqualität etc.) sind dann nicht verfuegbar.
