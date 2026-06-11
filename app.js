@@ -166,6 +166,8 @@ const els = {
     locationCountry: document.getElementById('locationCountry'),
     currentIcon:   document.getElementById('currentIcon'),
     currentTemp:   document.getElementById('currentTemp'),
+    currentTempMax: document.getElementById('currentTempMax'),
+    currentTempMin: document.getElementById('currentTempMin'),
     currentDesc:   document.getElementById('currentDesc'),
     feelsLike:     document.getElementById('feelsLike'),
     precipitation: document.getElementById('precipitation'),
@@ -394,6 +396,18 @@ function renderWeather(data, cityName, lat, lon) {
         }
     }
     els.currentDesc.textContent    = wmo.label;
+    // Tageshoch / Tagestief
+    if (els.currentTempMax && els.currentTempMin) {
+        const tMaxToday = (data.daily.temperature_2m_max || [])[0];
+        const tMinToday = (data.daily.temperature_2m_min || [])[0];
+        if (tMaxToday != null) {
+            els.currentTempMax.textContent = `${Math.round(tMaxToday)}°`;
+            els.currentTempMax.className = `temp-max ${tempColorClass(tMaxToday)}`;
+        }
+        if (tMinToday != null) {
+            els.currentTempMin.textContent = `${Math.round(tMinToday)}°`;
+        }
+    }
     els.feelsLike.textContent      = `${Math.round(cur.apparent_temperature)}°C`;
     // Niederschlag: mm + stündliche Wahrscheinlichkeit
     {
