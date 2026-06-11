@@ -283,6 +283,10 @@ async function loadWeatherForCoords(lat, lon, cityName) {
         displayName = await reverseGeocode(lat, lon);
     }
 
+    // Marker sofort setzen, damit der gewählte Ort direkt sichtbar ist -
+    // unabhängig davon, ob die Wetterdaten erfolgreich geladen werden.
+    setMarker(lat, lon, displayName);
+
     // Open-Meteo API aufrufen
     const params = new URLSearchParams({
         latitude:    lat.toFixed(4),
