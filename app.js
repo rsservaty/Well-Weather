@@ -19,6 +19,29 @@ const CONFIG = {
     searchDelay:  400,            // ms Debounce
 };
 
+// ---- Fetch mit Timeout + automatischem Retry ----
+// Schuetzt vor "haengenden" Requests (z.B. wenn die Open-Meteo-API
+// voruebergehend ueberlastet ist / 502 liefert / Verbindung resettet).
+async function fetchWithRetry(url, { timeout = 12000, retries = 1, retryDelay = 2000 } = {}) {
+    for (let attempt = 0; attempt <= retries; attempt++) {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), timeout);
+        try {
+            const r = await fetch(url, { signal: controller.signal });
+            clearTimeout(timer);
+            if (!r.ok) throw new Error(`HTTP ${r.status}`);
+            return await r.json();
+        } catch (err) {
+            clearTimeout(timer);
+            if (attempt < retries) {
+                await new Promise(res => setTimeout(res, retryDelay));
+                continue;
+            }
+            throw err;
+        }
+    }
+}
+
 // ---- WMO Wetter-Codes ----
 const WMO = {
     0:  { label: 'Klar',                       icon: '☀️' },
@@ -309,8 +332,7 @@ async function loadWeatherForCoords(lat, lon, cityName) {
 
     // Wetter + Luftqualität + Warnungen parallel laden
     const [weatherResult, airResult, warnResult] = await Promise.allSettled([
-        fetch(`${CONFIG.weatherUrl}?${params}`)
-            .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); }),
+        fetchWithRetry(`${CONFIG.weatherUrl}?${params}`, { timeout: 12000, retries: 1, retryDelay: 2000 }),
         fetchAirQuality(lat, lon),
         fetchWarnings(lat, lon),
     ]);
