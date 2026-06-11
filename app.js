@@ -287,7 +287,43 @@ async function loadWeatherForCoords(lat, lon, cityName) {
     // unabhängig davon, ob die Wetterdaten erfolgreich geladen werden.
     setMarker(lat, lon, displayName);
 
-    // Open-Meteo API aufrufen
+    // Gemeinsame Felder fuer "current"
+    const currentFields = [
+        'temperature_2m',
+        'apparent_temperature',
+        'precipitation',
+        'precipitation_probability',
+        'wind_speed_10m',
+        'wind_direction_10m',
+        'visibility',
+        'weather_code',
+        'uv_index',
+        'pressure_msl',
+        'relative_humidity_2m',
+    ].join(',');
+
+    // ---- Stufe 1: schnelle Basis-Anfrage (nur "current") ----
+    // Liefert sofort die wichtigsten Werte, damit der Nutzer nicht vor einer
+    // leeren/ladenden Ansicht haengt, falls die grosse Anfrage langsam ist.
+    const quickParams = new URLSearchParams({
+        latitude:        lat.toFixed(4),
+        longitude:       lon.toFixed(4),
+        current:         currentFields,
+        wind_speed_unit: 'kmh',
+        timezone:        'auto',
+    });
+
+    let quickOk = false;
+    try {
+        const quickData = await fetchWithRetry(`${CONFIG.weatherUrl}?${quickParams}`, { timeout: 8000, retries: 1, retryDelay: 1500 });
+        renderCurrentQuick(quickData, displayName);
+        showState('weatherContent');
+        quickOk = true;
+    } catch (err) {
+        console.warn('Schnellabfrage fehlgeschlagen:', err);
+    }
+
+    // ---- Stufe 2: vollstaendige Anfrage (daily/hourly + Luft + Warnungen) ----
     const params = new URLSearchParams({
         latitude:    lat.toFixed(4),
         longitude:   lon.toFixed(4),
@@ -313,19 +349,7 @@ async function loadWeatherForCoords(lat, lon, cityName) {
             'relative_humidity_2m',
             'cloud_cover',
         ].join(','),
-        current:     [
-            'temperature_2m',
-            'apparent_temperature',
-            'precipitation',
-            'precipitation_probability',
-            'wind_speed_10m',
-            'wind_direction_10m',
-            'visibility',
-            'weather_code',
-            'uv_index',
-            'pressure_msl',
-            'relative_humidity_2m',
-        ].join(','),
+        current:     currentFields,
         wind_speed_unit:    'kmh',
         timezone:           'auto',
         forecast_days:      7,
@@ -334,7 +358,7 @@ async function loadWeatherForCoords(lat, lon, cityName) {
 
     // Wetter + Luftqualität + Warnungen parallel laden
     const [weatherResult, airResult, warnResult] = await Promise.allSettled([
-        fetchWithRetry(`${CONFIG.weatherUrl}?${params}`, { timeout: 12000, retries: 1, retryDelay: 2000 }),
+        fetchWithRetry(`${CONFIG.weatherUrl}?${params}`, { timeout: 15000, retries: 1, retryDelay: 2000 }),
         fetchAirQuality(lat, lon),
         fetchWarnings(lat, lon),
     ]);
@@ -346,7 +370,11 @@ async function loadWeatherForCoords(lat, lon, cityName) {
         renderBio(data, airResult.status === 'fulfilled' ? airResult.value : null);
     } else {
         console.error('Wetterfehler:', weatherResult.reason);
-        showError('Wetterdaten konnten nicht geladen werden. Bitte prüfe deine Internetverbindung.');
+        if (!quickOk) {
+            showError('Wetterdaten konnten nicht geladen werden. Bitte prüfe deine Internetverbindung.');
+        }
+        // Sonst: einfache Ansicht (Stufe 1) bleibt sichtbar, erweiterte
+        // Daten (Vorhersage, Luftqualität etc.) sind dann nicht verfuegbar.
     }
 
     const pressure = weatherResult.status === 'fulfilled'
@@ -377,6 +405,24 @@ async function reverseGeocode(lat, lon) {
 }
 
 // ---- Wetter rendern ----
+// ---- Schnelle Basis-Anzeige (nur "current"-Daten) ----
+// Wird verwendet, solange die vollstaendige Anfrage (daily/hourly) noch laeuft
+// oder falls diese fehlschlaegt - damit der Nutzer sofort etwas sieht.
+function renderCurrentQuick(data, cityName) {
+    const cur = data.current;
+    const wmo = getWMO(cur.weather_code);
+
+    els.locationName.textContent    = cityName;
+    els.locationCountry.textContent = '';
+
+    els.currentIcon.textContent = wmo.icon;
+    els.currentTemp.textContent = `${Math.round(cur.temperature_2m)}°C`;
+    els.currentDesc.textContent = wmo.label;
+    if (els.feelsLike && cur.apparent_temperature != null) {
+        els.feelsLike.textContent = `${Math.round(cur.apparent_temperature)}°C`;
+    }
+}
+
 function renderWeather(data, cityName, lat, lon) {
     const cur = data.current;
     const daily = data.daily;
