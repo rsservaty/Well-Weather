@@ -1713,6 +1713,9 @@ function renderBio(data, airData) {
     // Hohe Tagestemperatur = warme Nacht, schlechter Schlaf
     if (temp != null && temp >= 30)      schlaf += 2;
     else if (temp != null && temp >= 25) schlaf += 1;
+    // Schwüle (Taupunkt) beeinträchtigt Schlaf
+    if (dewPt != null && dewPt >= 21)      schlaf += 2;
+    else if (dewPt != null && dewPt >= 16) schlaf += 1;
 
     // Tagesmüdigkeit
     let muedigkeit = 0;
@@ -1842,6 +1845,8 @@ function renderBio(data, airData) {
     function kreislaufHint() {
         if (dewPt != null && dewPt >= 21) return schwueleInfo(dewPt).label + ' — Kreislauf stark belastet, viel trinken.';
         if (dewPt != null && dewPt >= 16) return schwueleInfo(dewPt).label + ' — erhöht die Kreislaufbelastung.';
+        if (temp != null && temp >= 35) return 'Extreme Hitze — Kreislauf stark belastet, viel trinken und Schatten aufsuchen.';
+        if (temp != null && temp >= 30) return 'Hohe Temperaturen — Kreislauf beachten, ausreichend trinken.';
         if (pressureDiff < -8) return 'Starker Druckabfall — Kreislauf kann belastet sein.';
         if (pressureDiff < -3) return 'Leichter Druckabfall spürbar.';
         if (Math.abs(tChange) > 8) return 'Großer Temperatursprung morgen.';
@@ -1872,6 +1877,8 @@ function renderBio(data, airData) {
         if (pressureDiff < -3) return 'Leichter Druckabfall — kann die Tagesvitalität dämpfen.';
         if (dewPt != null && dewPt >= 21) return schwueleInfo(dewPt).label + ' — Energie sinkt, Körper kämpft gegen Hitze.';
         if (dewPt != null && dewPt >= 16) return schwueleInfo(dewPt).label + ' — Wärmeabgabe erschwert, kann müde machen.';
+        if (temp != null && temp >= 35) return 'Extreme Hitze erschöpft den Körper — Aktivitäten reduzieren, viel trinken.';
+        if (temp != null && temp >= 30) return 'Hohe Temperaturen dämpfen die Energie — kühlere Umgebung aufsuchen.';
         if (cloudCover != null && cloudCover > 80) return 'Trübes Licht mindert die Serotoninproduktion — etwas mehr Müdigkeit möglich.';
         return 'Gute Voraussetzungen für einen wachen, energiereichen Tag.';
     }
@@ -1880,6 +1887,8 @@ function renderBio(data, airData) {
         if (tSwing > 8) return 'Spürbare Temperaturdifferenz zwischen Tag und Nacht.';
         if (dewPt != null && dewPt >= 21) return schwueleInfo(dewPt).label + ' — Schlaf stark beeinträchtigt.';
         if (dewPt != null && dewPt >= 16) return schwueleInfo(dewPt).label + ' — kann den Schlaf beeinträchtigen.';
+        if (temp != null && temp >= 30) return 'Tropische Temperaturen — Nacht wird heiß, Schlaf beeinträchtigt.';
+        if (temp != null && temp >= 25) return 'Warme Nacht erwartet — Schlafqualität kann leiden.';
         if (pressureDiff < -3) return 'Wetterwechsel — kann den Schlaf leicht stören.';
         return 'Gute Schlafbedingungen erwartet.';
     }
