@@ -648,6 +648,7 @@ function renderWeather(data, cityName, lat, lon) {
     // Marker aktualisieren
     setMarker(lat, lon, cityName);
     updateMarkerTemp(cur.temperature_2m);
+    favsAfterRender();
 
     // 7-Tage-Vorhersage
     els.forecastGrid.innerHTML = '';
@@ -1474,11 +1475,106 @@ function renderUV(data) {
 }
 
 // =====================================================
+// FAVORITEN (localStorage, max. 5)
+// =====================================================
+const FAV_KEY  = 'wpunk_favorites';
+const FAV_MAX  = 5;
+
+function favsLoad() {
+    try { return JSON.parse(localStorage.getItem(FAV_KEY)) || []; }
+    catch { return []; }
+}
+function favsSave(favs) {
+    localStorage.setItem(FAV_KEY, JSON.stringify(favs));
+}
+function favFind(favs, lat, lon) {
+    return favs.findIndex(f => Math.abs(f.lat - lat) < 0.01 && Math.abs(f.lon - lon) < 0.01);
+}
+
+function favsRender() {
+    const favs = favsLoad();
+    const container = document.getElementById('favChips');
+    if (!container) return;
+    if (favs.length === 0) { container.classList.add('hidden'); return; }
+    container.classList.remove('hidden');
+    container.innerHTML = favs.map((f, i) =>
+        `<button class="fav-chip${i === 0 ? ' fav-chip-home' : ''}" data-idx="${i}" title="${f.name}">
+            ${i === 0 ? '🏠 ' : ''}${f.name}
+            <span class="fav-chip-del" data-del="${i}" title="Entfernen">×</span>
+        </button>`
+    ).join('');
+}
+
+function favsUpdateStar() {
+    const btn = document.getElementById('favStarBtn');
+    if (!btn || lastLat == null) return;
+    const favs = favsLoad();
+    const found = favFind(favs, lastLat, lastLon) >= 0;
+    btn.textContent = found ? '★' : '☆';
+    btn.classList.toggle('fav-star-active', found);
+}
+
+// Chip-Klicks (laden oder löschen)
+document.getElementById('favChips')?.addEventListener('click', e => {
+    const delIdx = e.target.dataset.del;
+    if (delIdx != null) {
+        e.stopPropagation();
+        const favs = favsLoad();
+        favs.splice(Number(delIdx), 1);
+        favsSave(favs);
+        favsRender();
+        favsUpdateStar();
+        return;
+    }
+    const chip = e.target.closest('.fav-chip');
+    if (!chip) return;
+    const favs = favsLoad();
+    const f = favs[Number(chip.dataset.idx)];
+    if (f) loadWeatherForCoords(f.lat, f.lon, f.name);
+});
+
+// Star-Button: Favorit hinzufügen / entfernen
+document.getElementById('favStarBtn')?.addEventListener('click', () => {
+    if (lastLat == null) return;
+    const favs  = favsLoad();
+    const idx   = favFind(favs, lastLat, lastLon);
+    const name  = document.getElementById('locationName')?.textContent?.trim() || 'Unbekannt';
+    if (idx >= 0) {
+        favs.splice(idx, 1);
+    } else {
+        if (favs.length >= FAV_MAX) favs.pop(); // ältesten entfernen
+        favs.unshift({ lat: lastLat, lon: lastLon, name });
+    }
+    favsSave(favs);
+    favsRender();
+    favsUpdateStar();
+});
+
+// Star nach jedem Wetterladen aktualisieren (wird aus renderWeather heraus aufgerufen)
+function favsAfterRender() {
+    favsUpdateStar();
+}
+
+// Beim Start: gespeicherte Favoriten anzeigen; ersten Favorit laden falls keine Geolocation
+function favsInit() {
+    favsRender();
+    // Erster Favorit wird nur geladen wenn tryGeolocation() keinen Standort liefert
+    // (tryGeolocation setzt lastLat, also prüfen wir nach kurzem Delay)
+    setTimeout(() => {
+        if (lastLat == null) {
+            const favs = favsLoad();
+            if (favs.length > 0) loadWeatherForCoords(favs[0].lat, favs[0].lon, favs[0].name);
+        }
+    }, 2500);
+}
+
+// =====================================================
 // APP STARTEN — nach allen Definitionen
 // =====================================================
 initMap();
 renderMoon();       // Mond braucht keinen Standort
 tryGeolocation();   // Standort beim Laden (Browser fragt nach Erlaubnis)
+favsInit();         // Favoriten-Chips anzeigen + Fallback laden
 
 // =====================================================
 // WETTER-WARNUNGEN (Bright Sky API — DWD-Daten)
