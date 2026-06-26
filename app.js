@@ -1677,7 +1677,10 @@ function renderBio(data, airData) {
     if (pressureDiff < -8)      kreislauf += 2;
     else if (pressureDiff < -3) kreislauf += 1;
     if (Math.abs(tChange) > 8)  kreislauf += 1;
-    // Schwüle (Taupunkt) belastet Kreislauf
+    // Hitze belastet Kreislauf direkt
+    if (temp != null && temp >= 35)      kreislauf += 2;
+    else if (temp != null && temp >= 30) kreislauf += 1;
+    // Schwüle (Taupunkt) belastet Kreislauf zusätzlich
     if (dewPt != null && dewPt >= 21)      kreislauf += 2;
     else if (dewPt != null && dewPt >= 16) kreislauf += 1;
 
@@ -1707,6 +1710,9 @@ function renderBio(data, airData) {
     else if (tSwing > 8)        schlaf += 1;
     if (pressureDiff < -3)      schlaf += 1;
     if (humidity != null && humidity > 80) schlaf += 1;
+    // Hohe Tagestemperatur = warme Nacht, schlechter Schlaf
+    if (temp != null && temp >= 30)      schlaf += 2;
+    else if (temp != null && temp >= 25) schlaf += 1;
 
     // Tagesmüdigkeit
     let muedigkeit = 0;
@@ -1714,6 +1720,9 @@ function renderBio(data, airData) {
     else if (pressureDiff < -3)  muedigkeit += 1;
     const cloudCover = (hourly.cloud_cover || [])[hIdx] ?? null;
     if (cloudCover != null && cloudCover > 80) muedigkeit += 1;
+    // Hitze erschöpft den Körper direkt
+    if (temp != null && temp >= 35)      muedigkeit += 2;
+    else if (temp != null && temp >= 30) muedigkeit += 1;
     if (dewPt != null && dewPt >= 21)      muedigkeit += 2;
     else if (dewPt != null && dewPt >= 16) muedigkeit += 1;
 
