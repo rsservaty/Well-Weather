@@ -156,6 +156,18 @@ function tempHex(t) {
 }
 
 
+// ---- Taupunkt-Berechnung (Magnus-Formel, Fehler < 0.35 °C) ----
+// Berechnet aus Temperatur (°C) und relativer Luftfeuchte (%).
+// Konsistenter als der API-Wert dew_point_2m, der aus einem anderen
+// Modell-Layer stammt und mit T/RH nicht immer übereinstimmt.
+function calcDewPoint(temp, humidity) {
+    if (temp == null || humidity == null || humidity <= 0) return null;
+    const a     = 17.625;
+    const b     = 243.04;
+    const alpha = Math.log(humidity / 100) + a * temp / (b + temp);
+    return b * alpha / (a - alpha);
+}
+
 // Zentrale Schwüle-Bewertung (genutzt in Wetter-Tab, Luft-Tab, Bio-Wetter)
 function schwueleInfo(td) {
     if (td == null)  return { label: '—',                          color: 'var(--text-muted)', hint: '' };
@@ -326,6 +338,7 @@ async function loadWeatherForCoords(lat, lon, cityName) {
         'uv_index',
         'pressure_msl',
         'relative_humidity_2m',
+        'dew_point_2m',
     ].join(',');
 
     // ---- Stufe 1: schnelle Basis-Anfrage (nur "current") ----
@@ -409,7 +422,7 @@ async function loadWeatherForCoords(lat, lon, cityName) {
 
     if (airResult.status === 'fulfilled' && airResult.value) {
         const _cur = weatherResult.status === 'fulfilled' ? (weatherResult.value?.current || {}) : {};
-        renderAir(airResult.value, pressure, _cur.temperature_2m ?? null, _cur.relative_humidity_2m ?? null, _cur.wind_speed_10m ?? null, _cur.wind_direction_10m ?? null);
+        renderAir(airResult.value, pressure, _cur.temperature_2m ?? null, _cur.relative_humidity_2m ?? null, _cur.wind_speed_10m ?? null, _cur.wind_direction_10m ?? null, _cur.dew_point_2m ?? null);
     }
 
     renderWarnings(warnResult.status === 'fulfilled' ? warnResult.value : null);
@@ -544,12 +557,12 @@ function renderWeather(data, cityName, lat, lon) {
         currentWeatherEl.insertAdjacentElement('afterend', hourlySection);
     }
 
-    // Schwüle für Wetter-Tab berechnen
+    // Schwüle für Wetter-Tab berechnen – API-Taupunkt bevorzugen
     const _wTemp = cur.temperature_2m ?? null;
     const _wHum  = cur.relative_humidity_2m ?? null;
     let   _wSchwuele = '';
-    if (_wTemp != null && _wHum != null) {
-        const _wTd = _wTemp - (100 - _wHum) / 5;
+    const _wTd = calcDewPoint(_wTemp, _wHum);
+    if (_wTd != null) {
         _wSchwuele = schwueleInfo(_wTd).hint;
     }
 
@@ -574,12 +587,14 @@ function renderWeather(data, cityName, lat, lon) {
     hourlySlice.forEach((timeStr, i) => {
         const idx      = fromIdx + i;
         const code     = hourly.weather_code[idx];
-        const temp     = hourly.temperature_2m[idx];
+        const isNow    = i === 0;
+        // Für "Jetzt": gemessenen current-Wert nehmen (statt Modell-Stundenwert)
+        const temp     = (isNow && cur.temperature_2m != null) ? cur.temperature_2m : hourly.temperature_2m[idx];
         const prec     = hourly.precipitation[idx];
         const prob     = (hourly.precipitation_probability || [])[idx];
         const wmoH     = getWMO(code);
         const hour     = timeStr.slice(11, 16); // "14:00"
-        const isNow    = i === 0;
+
 
         const card = document.createElement('div');
         card.className = 'hourly-card' + (isNow ? ' current-hour' : '');
@@ -987,7 +1002,7 @@ async function fetchAirQuality(lat, lon) {
     } catch { return null; }
 }
 
-function renderAir(data, pressure, temp, humidity, windSpeed, windDir) {
+function renderAir(data, pressure, temp, humidity, windSpeed, windDir, apiDewPoint = null) {
     const cur = data.current || {};
     const aqi = cur.european_aqi != null ? cur.european_aqi : null;
 
@@ -1069,12 +1084,11 @@ function renderAir(data, pressure, temp, humidity, windSpeed, windDir) {
     const windDirStr   = windDirLabel(windDir);
     const windDirArr   = windDirArrow(windDir);
 
-    // Schwüle berechnen (Taupunkt: Td ≈ T - (100 - RH) / 5)
-    let dewPoint = null;
+    // Taupunkt via Magnus-Formel aus T + RH berechnen (konsistenter als API-Wert)
+    let dewPoint = calcDewPoint(temp, humidity);
     let schwueleLabel = '—';
     let schwueleColor = 'var(--text-muted)';
-    if (temp != null && humidity != null) {
-        dewPoint = temp - (100 - humidity) / 5;
+    if (dewPoint != null) {
         const si = schwueleInfo(dewPoint);
         schwueleLabel = si.label;
         schwueleColor = si.color;
@@ -1647,7 +1661,8 @@ function renderBio(data, airData) {
     const ozone = airData ? ((airData.current || {}).ozone ?? 0) : 0;
 
     // Taupunkt (zentral für alle Schwüle-Berechnungen)
-    const dewPt = (temp != null && humidity != null) ? temp - (100 - humidity) / 5 : null;
+    // API-Wert bevorzugen, Näherungsformel nur als Fallback
+    const dewPt = calcDewPoint(temp, humidity);
 
     // Sonderbedingungen
     const hasThunder = wcode >= 95;
