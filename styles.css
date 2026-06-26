@@ -838,6 +838,52 @@ body.panel-hidden .map-wrapper {
 }
 
 /* =====================================================
+   KARTEN-FÄHNCHEN (Custom Marker)
+   ===================================================== */
+
+.map-flag {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    pointer-events: none;
+}
+
+.map-flag-body {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--card-bg, #fff);
+    border: 1.5px solid var(--border-color, #e2e8f0);
+    border-left: 4px solid #6b7280;
+    border-radius: 6px;
+    padding: 3px 8px 3px 6px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.18);
+    white-space: nowrap;
+}
+
+.map-flag-city {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--text-primary, #1a202c);
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.map-flag-temp {
+    font-size: 0.9rem;
+    font-weight: 800;
+}
+
+.map-flag-pin {
+    width: 3px;
+    height: 10px;
+    background: #6b7280;
+    margin-left: 6px;
+    border-radius: 0 0 2px 2px;
+}
+
+/* =====================================================
    TABS
    ===================================================== */
 
