@@ -862,16 +862,16 @@ body.panel-hidden .map-wrapper {
 }
 
 .map-flag-city {
-    font-size: 0.78rem;
+    font-size: 1rem;
     font-weight: 700;
     color: var(--text-primary, #1a202c);
-    max-width: 120px;
+    max-width: 140px;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
 .map-flag-temp {
-    font-size: 0.9rem;
+    font-size: 1.15rem;
     font-weight: 800;
 }
 
