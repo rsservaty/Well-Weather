@@ -231,7 +231,7 @@ const els = {
     feelsLike:     document.getElementById('feelsLike'),
     precipitation: document.getElementById('precipitation'),
     windSpeed:     document.getElementById('windSpeed'),
-    humidity:      document.getElementById('humidity'),
+    visibility:    document.getElementById('visibility'),
     tempTrend:     document.getElementById('tempTrend'),
     localTimeBadge: document.getElementById('localTimeBadge'),
     forecastGrid:  document.getElementById('forecastGrid'),
@@ -422,7 +422,7 @@ async function loadWeatherForCoords(lat, lon, cityName) {
 
     if (airResult.status === 'fulfilled' && airResult.value) {
         const _cur = weatherResult.status === 'fulfilled' ? (weatherResult.value?.current || {}) : {};
-        renderAir(airResult.value, pressure, _cur.temperature_2m ?? null, _cur.relative_humidity_2m ?? null, _cur.wind_speed_10m ?? null, _cur.wind_direction_10m ?? null, _cur.dew_point_2m ?? null);
+        renderAir(airResult.value, pressure, _cur.temperature_2m ?? null, _cur.relative_humidity_2m ?? null, _cur.wind_speed_10m ?? null, _cur.wind_direction_10m ?? null);
     }
 
     renderWarnings(warnResult.status === 'fulfilled' ? warnResult.value : null);
@@ -495,7 +495,7 @@ function renderWeather(data, cityName, lat, lon) {
         const nowH = `${_tNow.getFullYear()}-${_tPad(_tNow.getMonth()+1)}-${_tPad(_tNow.getDate())}T${_tPad(_tNow.getHours())}`;
         const nowIdx = (hourly.time || []).findIndex(t => t.startsWith(nowH));
         if (nowIdx >= 0 && nowIdx + 3 < (hourly.temperature_2m || []).length) {
-            const tCur   = hourly.temperature_2m[nowIdx];
+            const tCur   = cur.temperature_2m ?? hourly.temperature_2m[nowIdx]; // Messwert bevorzugen
             const tFut   = hourly.temperature_2m[nowIdx + 3];
             const diff   = tFut - tCur;
             if (diff > 1.5) {
@@ -533,9 +533,9 @@ function renderWeather(data, cityName, lat, lon) {
     const vis = cur.visibility;
     if (vis != null) {
         const visKm = (vis / 1000).toFixed(1);
-        els.humidity.textContent = visKm >= 10 ? '>10 km' : `${visKm} km`;
+        els.visibility.textContent = Number(visKm) >= 10 ? '>10 km' : `${visKm} km`;
     } else {
-        els.humidity.textContent = '—';
+        els.visibility.textContent = '—';
     }
 
     // ---- Stündliche Vorhersage (nächste 24h) ----
@@ -1002,7 +1002,29 @@ async function fetchAirQuality(lat, lon) {
     } catch { return null; }
 }
 
-function renderAir(data, pressure, temp, humidity, windSpeed, windDir, apiDewPoint = null) {
+// ---- Wind-Hilfsfunktionen (global, auch in Bio-Wetter nutzbar) ----
+function beaufort(kmh) {
+    if (kmh < 1)   return { bft: 0, label: 'Windstille' };
+    if (kmh < 6)   return { bft: 1, label: 'Leichter Zug' };
+    if (kmh < 12)  return { bft: 2, label: 'Leichte Brise' };
+    if (kmh < 20)  return { bft: 3, label: 'Schwache Brise' };
+    if (kmh < 29)  return { bft: 4, label: 'Mäßige Brise' };
+    if (kmh < 39)  return { bft: 5, label: 'Frische Brise' };
+    if (kmh < 50)  return { bft: 6, label: 'Starker Wind' };
+    if (kmh < 62)  return { bft: 7, label: 'Steifer Wind' };
+    if (kmh < 75)  return { bft: 8, label: 'Stürmischer Wind' };
+    if (kmh < 89)  return { bft: 9, label: 'Sturm' };
+    if (kmh < 103) return { bft: 10, label: 'Schwerer Sturm' };
+    if (kmh < 117) return { bft: 11, label: 'Orkanartiger Sturm' };
+    return           { bft: 12, label: 'Orkan' };
+}
+function windDirLabel(deg) {
+    if (deg == null) return '—';
+    const dirs = ['N','NO','O','SO','S','SW','W','NW'];
+    return dirs[Math.round(deg / 45) % 8];
+}
+
+function renderAir(data, pressure, temp, humidity, windSpeed, windDir) {
     const cur = data.current || {};
     const aqi = cur.european_aqi != null ? cur.european_aqi : null;
 
@@ -1053,30 +1075,9 @@ function renderAir(data, pressure, temp, humidity, windSpeed, windDir, apiDewPoi
         </div>`;
     }).join('');
 
-    // Beaufort-Skala
-    function beaufort(kmh) {
-        if (kmh < 1)   return { bft: 0, label: 'Windstille' };
-        if (kmh < 6)   return { bft: 1, label: 'Leichter Zug' };
-        if (kmh < 12)  return { bft: 2, label: 'Leichte Brise' };
-        if (kmh < 20)  return { bft: 3, label: 'Schwache Brise' };
-        if (kmh < 29)  return { bft: 4, label: 'Mäßige Brise' };
-        if (kmh < 39)  return { bft: 5, label: 'Frische Brise' };
-        if (kmh < 50)  return { bft: 6, label: 'Starker Wind' };
-        if (kmh < 62)  return { bft: 7, label: 'Steifer Wind' };
-        if (kmh < 75)  return { bft: 8, label: 'Stürmischer Wind' };
-        if (kmh < 89)  return { bft: 9, label: 'Sturm' };
-        if (kmh < 103) return { bft: 10, label: 'Schwerer Sturm' };
-        if (kmh < 117) return { bft: 11, label: 'Orkanartiger Sturm' };
-        return           { bft: 12, label: 'Orkan' };
-    }
-    function windDirLabel(deg) {
-        if (deg == null) return '—';
-        const dirs = ['N','NO','O','SO','S','SW','W','NW'];
-        return dirs[Math.round(deg / 45) % 8];
-    }
+    // Beaufort + Windrichtung: globale Hilfsfunktionen (siehe oben)
     function windDirArrow(deg) {
         if (deg == null) return '';
-        // Pfeil zeigt wohin der Wind weht (Richtung + 180°)
         const arrows = ['↓','↙','←','↖','↑','↗','→','↘'];
         return arrows[Math.round(deg / 45) % 8];
     }
@@ -1084,7 +1085,7 @@ function renderAir(data, pressure, temp, humidity, windSpeed, windDir, apiDewPoi
     const windDirStr   = windDirLabel(windDir);
     const windDirArr   = windDirArrow(windDir);
 
-    // Taupunkt via Magnus-Formel aus T + RH berechnen (konsistenter als API-Wert)
+    // Taupunkt via Magnus-Formel aus T + RH berechnen
     let dewPoint = calcDewPoint(temp, humidity);
     let schwueleLabel = '—';
     let schwueleColor = 'var(--text-muted)';
@@ -1775,8 +1776,18 @@ function renderBio(data, airData) {
                 if (th) s += 1;
                 return Math.min(s, 2);
             }
-            case 'kreislauf':
-                return Math.min(kreislauf, 2);
+            case 'kreislauf': {
+                let s = 0;
+                const td = calcDewPoint(t, h);
+                if (t != null && t >= 35) s += 2; else if (t != null && t >= 30) s += 1;
+                if (td != null && td >= 21) s += 2; else if (td != null && td >= 16) s += 1;
+                // Drucktendenz: aktueller Stundenwert vs. 24h zuvor
+                const pI   = (hourly.pressure_msl || [])[i]         ?? null;
+                const pAgo = (hourly.pressure_msl || [])[i - 24]    ?? null;
+                const dp   = (pI != null && pAgo != null) ? pI - pAgo : 0;
+                if (dp < -8) s += 2; else if (dp < -3) s += 1;
+                return Math.min(s, 2);
+            }
             case 'muedigkeit': {
                 let s = 0;
                 if (pressureDiff < -6) s += 2; else if (pressureDiff < -3) s += 1;
