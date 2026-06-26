@@ -209,6 +209,7 @@ function isToday(dateStr) {
 // ---- Zustand ----
 let map;
 let marker = null;
+let markerCityName = null;
 let lastLat = null;
 let lastLon = null;
 let searchDebounce = null;
@@ -286,19 +287,40 @@ function initMap() {
     });
 }
 
+// ---- Marker-Icon bauen ----
+function buildMarkerIcon(cityName, temp) {
+    const label = cityName || '';
+    const hasTemp = temp != null;
+    const tempStr = hasTemp ? `${Math.round(temp)}°` : '';
+    const color   = hasTemp ? tempHex(temp) : '#6b7280';
+    return L.divIcon({
+        className: '',
+        iconAnchor: [0, 36],
+        popupAnchor: [60, -36],
+        html: `
+        <div class="map-flag">
+          <div class="map-flag-body" style="border-left-color:${color}">
+            <span class="map-flag-city">${label}</span>
+            ${hasTemp ? `<span class="map-flag-temp" style="color:${color}">${tempStr}</span>` : ''}
+          </div>
+          <div class="map-flag-pin" style="background:${color}"></div>
+        </div>`
+    });
+}
+
 // ---- Marker setzen ----
 function setMarker(lat, lon, cityName) {
+    markerCityName = cityName || markerCityName;
     if (marker) {
         map.removeLayer(marker);
     }
-    marker = L.marker([lat, lon]).addTo(map);
-    if (cityName) {
-        marker.bindPopup(`
-            <div class="weather-marker-popup">
-                <div class="popup-city">${cityName}</div>
-            </div>
-        `).openPopup();
-    }
+    marker = L.marker([lat, lon], { icon: buildMarkerIcon(markerCityName, null) }).addTo(map);
+}
+
+// ---- Marker-Temperatur aktualisieren (nach Datenladen) ----
+function updateMarkerTemp(temp) {
+    if (!marker) return;
+    marker.setIcon(buildMarkerIcon(markerCityName, temp));
 }
 
 // ---- Wetterdaten laden ----
@@ -625,6 +647,7 @@ function renderWeather(data, cityName, lat, lon) {
 
     // Marker aktualisieren
     setMarker(lat, lon, cityName);
+    updateMarkerTemp(cur.temperature_2m);
 
     // 7-Tage-Vorhersage
     els.forecastGrid.innerHTML = '';
