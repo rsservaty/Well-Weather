@@ -3,7 +3,7 @@
    Strategie: Static Assets cached, API-Calls live
    ===================================================== */
 
-const CACHE = 'wetter-europa-v109';
+const CACHE = 'wetter-europa-v110';
 
 const STATIC = [
     './',
