@@ -169,14 +169,20 @@ function calcDewPoint(temp, humidity) {
 }
 
 // Zentrale Schwüle-Bewertung (genutzt in Wetter-Tab, Luft-Tab, Bio-Wetter)
-function schwueleInfo(td) {
-    if (td == null)  return { label: '—',                          color: 'var(--text-muted)', hint: '' };
+function schwueleInfo(td, temp) {
+    if (td == null)  return { label: '—', color: 'var(--text-muted)', hint: '' };
+    // Hohe Schwüle — dominiert unabhängig von Temperatur
     if (td >= 24)    return { label: 'Luft: tropisch, sehr belastend', color: '#ef4444', hint: '💧 Luft: tropisch, sehr belastend' };
     if (td >= 21)    return { label: 'Luft: sehr schwül, belastend',   color: '#f97316', hint: '💧 Luft: sehr schwül, belastend' };
     if (td >= 18)    return { label: 'Luft: schwül',                   color: '#eab308', hint: '💧 Luft: schwül' };
     if (td >= 16)    return { label: 'Luft: drückend, leicht schwül',  color: '#a3e635', hint: '💧 Luft: drückend, leicht schwül' };
-    if (td >= 10)    return { label: 'Luft: angenehm/frisch',          color: '#22c55e', hint: '' };
-    return             { label: 'Luft: trocken',                   color: '#22c55e', hint: '' };
+    // Niedriger Taupunkt — jetzt Temperatur berücksichtigen
+    const t = temp ?? 20;
+    if (t >= 35)     return { label: 'Heiß und trocken, stark belastend', color: '#ef4444', hint: '🌡️ Extreme Hitze, trockene Luft — Hitzschlaggefahr' };
+    if (t >= 30)     return { label: 'Heiß und trocken, belastend',       color: '#f97316', hint: '🌡️ Starke Hitze, trockene Luft — viel trinken' };
+    if (t >= 25)     return { label: 'Warm, Luft trocken',                color: '#eab308', hint: '' };
+    if (td >= 10)    return { label: 'Luft: angenehm/frisch',             color: '#22c55e', hint: '' };
+    return             { label: 'Luft: trocken',                       color: '#22c55e', hint: '' };
 }
 
 // Zentrale UV-Bewertung (genutzt in Wetter-Tab + UV-Tab)
@@ -585,7 +591,7 @@ function renderWeather(data, cityName, lat, lon) {
     let   _wSchwuele = '';
     const _wTd = calcDewPoint(_wTemp, _wHum);
     if (_wTd != null) {
-        _wSchwuele = schwueleInfo(_wTd).hint;
+        _wSchwuele = schwueleInfo(_wTd, _wTemp).hint;
     }
 
     // UV-Hinweis für Wetter-Tab (Tagesmax)
@@ -1114,7 +1120,7 @@ function renderAir(data, pressure, temp, humidity, windSpeed, windDir) {
     let schwueleLabel = '—';
     let schwueleColor = 'var(--text-muted)';
     if (dewPoint != null) {
-        const si = schwueleInfo(dewPoint);
+        const si = schwueleInfo(dewPoint, temp);
         schwueleLabel = si.label;
         schwueleColor = si.color;
     }
@@ -1973,8 +1979,8 @@ function renderBio(data, airData) {
 
     // Hinweis-Texte
     function kreislaufHint() {
-        if (dewPt != null && dewPt >= 21) return schwueleInfo(dewPt).label + ' — Kreislauf stark belastet, viel trinken.';
-        if (dewPt != null && dewPt >= 16) return schwueleInfo(dewPt).label + ' — erhöht die Kreislaufbelastung.';
+        if (dewPt != null && dewPt >= 21) return schwueleInfo(dewPt, temp).label + ' — Kreislauf stark belastet, viel trinken.';
+        if (dewPt != null && dewPt >= 16) return schwueleInfo(dewPt, temp).label + ' — erhöht die Kreislaufbelastung.';
         if (temp != null && temp >= 35) return 'Extreme Hitze — Kreislauf stark belastet, viel trinken und Schatten aufsuchen.';
         if (temp != null && temp >= 30) return 'Hohe Temperaturen — Kreislauf beachten, ausreichend trinken.';
         if (pressureDiff < -8) return 'Starker Druckabfall — Kreislauf kann belastet sein.';
@@ -2005,8 +2011,8 @@ function renderBio(data, airData) {
     function muedigkeitHint() {
         if (pressureDiff < -6) return 'Deutlicher Druckabfall — Antriebslosigkeit und Müdigkeit wahrscheinlich.';
         if (pressureDiff < -3) return 'Leichter Druckabfall — kann die Tagesvitalität dämpfen.';
-        if (dewPt != null && dewPt >= 21) return schwueleInfo(dewPt).label + ' — Energie sinkt, Körper kämpft gegen Hitze.';
-        if (dewPt != null && dewPt >= 16) return schwueleInfo(dewPt).label + ' — Wärmeabgabe erschwert, kann müde machen.';
+        if (dewPt != null && dewPt >= 21) return schwueleInfo(dewPt, temp).label + ' — Energie sinkt, Körper kämpft gegen Hitze.';
+        if (dewPt != null && dewPt >= 16) return schwueleInfo(dewPt, temp).label + ' — Wärmeabgabe erschwert, kann müde machen.';
         if (temp != null && temp >= 35) return 'Extreme Hitze erschöpft den Körper — Aktivitäten reduzieren, viel trinken.';
         if (temp != null && temp >= 30) return 'Hohe Temperaturen dämpfen die Energie — kühlere Umgebung aufsuchen.';
         if (cloudCover != null && cloudCover > 80) return 'Trübes Licht mindert die Serotoninproduktion — etwas mehr Müdigkeit möglich.';
@@ -2015,8 +2021,8 @@ function renderBio(data, airData) {
     function schlafHint() {
         if (tSwing > 12) return 'Große Temperaturschwankung heute — Schlaf kann unruhig sein.';
         if (tSwing > 8) return 'Spürbare Temperaturdifferenz zwischen Tag und Nacht.';
-        if (dewPt != null && dewPt >= 21) return schwueleInfo(dewPt).label + ' — Schlaf stark beeinträchtigt.';
-        if (dewPt != null && dewPt >= 16) return schwueleInfo(dewPt).label + ' — kann den Schlaf beeinträchtigen.';
+        if (dewPt != null && dewPt >= 21) return schwueleInfo(dewPt, temp).label + ' — Schlaf stark beeinträchtigt.';
+        if (dewPt != null && dewPt >= 16) return schwueleInfo(dewPt, temp).label + ' — kann den Schlaf beeinträchtigen.';
         if (temp != null && temp >= 30) return 'Tropische Temperaturen — Nacht wird heiß, Schlaf beeinträchtigt.';
         if (temp != null && temp >= 25) return 'Warme Nacht erwartet — Schlafqualität kann leiden.';
         if (pressureDiff < -3) return 'Wetterwechsel — kann den Schlaf leicht stören.';
@@ -2029,8 +2035,8 @@ function renderBio(data, airData) {
         if (temp != null && temp < 2) return 'Zu kalt — Verletzungsgefahr durch gefrorenen Boden.';
         if (wind > 50) return 'Sehr starker Wind — draußen Sport gefährlich.';
         if (precip > 0.5) return 'Niederschlag — Sport nur mit entsprechender Ausrüstung.';
-        if (dewPt != null && dewPt >= 21) return schwueleInfo(dewPt).label + ' — körperliche Belastung stark erhöht, viel trinken.';
-        if (dewPt != null && dewPt >= 16) return schwueleInfo(dewPt).label + ' — erhöht die Belastung beim Sport.';
+        if (dewPt != null && dewPt >= 21) return schwueleInfo(dewPt, temp).label + ' — körperliche Belastung stark erhöht, viel trinken.';
+        if (dewPt != null && dewPt >= 16) return schwueleInfo(dewPt, temp).label + ' — erhöht die Belastung beim Sport.';
         if (cur.uv_index != null && cur.uv_index > 8) return 'Sehr hoher UV-Index — nur mit Sonnenschutz und in kühlen Stunden.';
         if (wind > 30) return 'Kräftiger Wind — leicht eingeschränkt, aber möglich.';
         if (temp != null && (temp < 8 || temp > 30)) return 'Temperatur am Grenzbereich — angepasste Kleidung empfohlen.';
